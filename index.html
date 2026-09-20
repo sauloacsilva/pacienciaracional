@@ -1,0 +1,2361 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Paciência Racional - Paciência das Equivalências Matemáticas</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        felt: {
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                            dark: '#052e16'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --card-width: clamp(48px, 14vw, 94px);
+            --card-height: calc(var(--card-width) * 1.42);
+            --card-gap: clamp(4px, 1.2vw, 12px);
+            --board-bg: radial-gradient(circle at center, #166534 0%, #0f3e21 60%, #052e16 100%);
+        }
+
+        /* Themes */
+        body[data-theme="felt-green"] {
+            --board-bg: radial-gradient(circle at center, #166534 0%, #0f3e21 60%, #052e16 100%);
+        }
+        body[data-theme="ocean-blue"] {
+            --board-bg: radial-gradient(circle at center, #1e3a8a 0%, #172554 60%, #090d16 100%);
+        }
+        body[data-theme="royal-purple"] {
+            --board-bg: radial-gradient(circle at center, #581c87 0%, #3b0764 60%, #1a032c 100%);
+        }
+        body[data-theme="dark-obsidian"] {
+            --board-bg: radial-gradient(circle at center, #1e293b 0%, #0f172a 60%, #020617 100%);
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow-x: hidden;
+            background: var(--board-bg);
+            transition: background 0.4s ease;
+        }
+
+        /* Glassmorphism containers */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .glass-card-slot {
+            background: rgba(0, 0, 0, 0.28);
+            border: 2px dashed rgba(255, 255, 255, 0.32);
+            border-radius: 0.65rem;
+            width: var(--card-width);
+            height: var(--card-height);
+            transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .glass-card-slot.valid-target {
+            border-color: #38bdf8 !important;
+            background: rgba(56, 189, 248, 0.2) !important;
+            box-shadow: 0 0 14px rgba(56, 189, 248, 0.6);
+        }
+
+        /* Game Card Styling */
+        .game-card {
+            width: var(--card-width);
+            height: var(--card-height);
+            border-radius: 0.65rem;
+            position: relative;
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.25);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+            cursor: pointer;
+            touch-action: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 0.3rem;
+            border: 2.5px solid #e2e8f0;
+        }
+
+        /* Card Back Themes */
+        .game-card.card-back {
+            border: 2px solid #ffffff;
+            transition: transform 0.2s ease;
+        }
+        body[data-card-back="blue"] .game-card.card-back {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #1d4ed8 100%);
+        }
+        body[data-card-back="gold"] .game-card.card-back {
+            background: linear-gradient(135deg, #78350f 0%, #d97706 50%, #b45309 100%);
+        }
+        body[data-card-back="ruby"] .game-card.card-back {
+            background: linear-gradient(135deg, #881337 0%, #e11d48 50%, #be123c 100%);
+        }
+
+        .game-card.card-back::after {
+            content: '';
+            position: absolute;
+            inset: 4px;
+            border: 1px dashed rgba(255, 255, 255, 0.6);
+            border-radius: 0.35rem;
+        }
+
+        .game-card.selected {
+            border-color: #f59e0b !important;
+            box-shadow: 0 0 0 4px #f59e0b, 0 10px 18px -3px rgba(0, 0, 0, 0.6);
+            transform: translateY(-6px);
+        }
+
+        .game-card.hint-highlight {
+            animation: pulse-border 1.2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { box-shadow: 0 0 0 0px rgba(245, 158, 11, 0.9); }
+            50% { box-shadow: 0 0 0 7px rgba(245, 158, 11, 0.9); }
+        }
+
+        /* Card overlaps in Tableau */
+        .tableau-column {
+            width: var(--card-width);
+            min-height: calc(var(--card-height) * 2.2);
+            position: relative;
+        }
+
+        .tableau-card-wrapper {
+            position: absolute;
+            left: 0;
+            width: var(--card-width);
+        }
+
+        /* Dragging layer */
+        #drag-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .dragging-card-stack {
+            position: absolute;
+            pointer-events: none;
+            filter: drop-shadow(0 18px 18px rgba(0,0,0,0.65));
+            transform: scale(1.06);
+            transition: none;
+        }
+
+        /* Fraction layout styling */
+        .fraction-display {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            font-weight: 800;
+        }
+        .fraction-numerator {
+            border-bottom: 2px solid currentColor;
+            padding-bottom: 1px;
+            width: 100%;
+            text-align: center;
+        }
+        .fraction-denominator {
+            padding-top: 1px;
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Completed foundation pulse animation */
+        @keyframes completed-burst {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.18); filter: brightness(1.5); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+        .completed-anim {
+            animation: completed-burst 0.65s ease-in-out;
+        }
+
+        /* Pause overlay */
+        #pause-overlay {
+            display: none;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            background: rgba(2, 6, 23, 0.85);
+        }
+        #pause-overlay.active {
+            display: flex;
+        }
+
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body data-theme="felt-green" data-card-back="blue" class="min-h-screen text-white flex flex-col justify-between select-none">
+
+    <!-- TOP HEADER / TOOLBAR -->
+    <header class="glass-panel sticky top-0 z-30 px-2 sm:px-4 py-2 flex flex-wrap items-center justify-between gap-2 shadow-lg">
+        <!-- Logo & Difficulty -->
+        <div class="flex items-center gap-2 flex-wrap">
+            <div class="bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black px-2.5 py-1 rounded-lg text-xs sm:text-sm tracking-wide shadow-md flex items-center gap-1.5 cursor-pointer" id="logo-badge" title="Paciência das Equivalências Racionais">
+                <span>🔄</span> <span class="hidden xs:inline">PACIÊNCIA</span> RACIONAL
+            </div>
+
+            <!-- Difficulty Selector Dropdown -->
+            <div class="relative">
+                <select id="select-difficulty" class="bg-slate-900/90 border border-amber-400/50 text-amber-300 text-xs font-bold rounded-lg px-2.5 py-1 pr-7 focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer shadow">
+                    <option value="facil">🟢 Fácil (Iniciante)</option>
+                    <option value="medio" selected>🔵 Médio (Clássico)</option>
+                    <option value="dificil">🟠 Difícil (Desafio)</option>
+                    <option value="insano">🔴 Insano (Mestre)</option>
+                </select>
+            </div>
+
+            <!-- Desktop Stats & Timer -->
+            <div class="hidden md:flex items-center text-xs text-emerald-200 gap-3 ml-1 font-medium bg-black/30 px-3 py-1 rounded-lg border border-white/10">
+                <!-- Progressive Timer with Realtime Multiplier -->
+                <div class="flex items-center gap-1.5 font-mono">
+                    <span class="text-amber-400">⏱️</span>
+                    <span id="timer-display" class="font-bold text-white tracking-wider">00:00</span>
+                    <span id="multiplier-badge" class="ml-1 px-1.5 py-0.2 rounded text-[11px] font-black bg-amber-500/20 text-amber-300 border border-amber-400/40" title="Multiplicador por tempo de conclusão">3.0x ⚡</span>
+                </div>
+                <span class="text-white/30">|</span>
+                <span>Pontos: <strong id="score-count" class="text-amber-300 font-bold">0</strong></span>
+                <span>Movs: <strong id="move-count" class="text-white font-bold">0</strong></span>
+                <span>Conjuntos: <strong id="completed-sets-count" class="text-emerald-300 font-bold">0/8</strong></span>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+            <!-- Auto Complete Button (Conditional) -->
+            <button id="btn-auto-complete" class="hidden px-2.5 py-1 rounded-md text-xs font-black bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 shadow-lg animate-pulse transition flex items-center gap-1">
+                ⚡ Auto-Finalizar
+            </button>
+
+            <!-- Pause / Resume -->
+            <button id="btn-pause" class="px-2 py-1 rounded-md text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white shadow border border-white/10 transition flex items-center gap-1" title="Pausar o tempo (Atalho: P)">
+                <span id="btn-pause-icon">⏸️</span>
+            </button>
+
+            <!-- Hint -->
+            <button id="btn-hint" class="px-2.5 py-1 rounded-md text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white shadow transition flex items-center gap-1" title="Pedir Dica (Atalho: H)">
+                💡 <span class="hidden sm:inline">Dica</span>
+            </button>
+
+            <!-- Undo -->
+            <button id="btn-undo" class="px-2.5 py-1 rounded-md text-xs font-bold bg-slate-700 hover:bg-slate-600 text-white shadow transition flex items-center gap-1" title="Desfazer (Atalho: Ctrl+Z ou U)">
+                ↩️ <span class="hidden sm:inline">Desfazer</span>
+            </button>
+
+            <!-- Stats -->
+            <button id="btn-stats" class="px-2 py-1 rounded-md text-xs font-bold bg-indigo-700 hover:bg-indigo-600 text-white shadow transition flex items-center gap-1" title="Ver Estatísticas e Recordes">
+                📊
+            </button>
+
+            <!-- Themes / Config -->
+            <button id="btn-theme" class="px-2 py-1 rounded-md text-xs font-bold bg-purple-700 hover:bg-purple-600 text-white shadow transition flex items-center gap-1" title="Personalizar Temas">
+                🎨
+            </button>
+
+            <!-- Equivalency Table / Guide -->
+            <button id="btn-guide" class="px-2 py-1 rounded-md text-xs font-bold bg-teal-700 hover:bg-teal-600 text-white shadow transition flex items-center gap-1" title="Tabela de Equivalências">
+                📖
+            </button>
+
+            <!-- Rules -->
+            <button id="btn-rules" class="px-2 py-1 rounded-md text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow transition flex items-center gap-1" title="Como Jogar">
+                ❓
+            </button>
+
+            <!-- Restart -->
+            <button id="btn-restart" class="px-2.5 py-1 rounded-md text-xs font-bold bg-rose-700 hover:bg-rose-600 text-white shadow transition flex items-center gap-1" title="Novo Jogo (Atalho: N)">
+                🔄 <span class="hidden sm:inline">Novo Jogo</span>
+            </button>
+
+            <!-- Sound -->
+            <button id="btn-sound" class="p-1 px-2 rounded-md text-xs bg-slate-800 hover:bg-slate-700 text-amber-300 border border-white/10" title="Ativar/Desativar Som (Atalho: M)">
+                🔊
+            </button>
+        </div>
+    </header>
+
+    <!-- Mobile Stats & Timer Bar -->
+    <div class="md:hidden flex justify-around items-center bg-emerald-950/80 px-2 py-1.5 text-xs text-emerald-200 border-b border-emerald-800/50 font-medium">
+        <div class="flex items-center gap-1 font-mono">
+            <span class="text-amber-400">⏱️</span>
+            <span id="timer-display-mobile" class="font-bold text-white">00:00</span>
+            <span id="multiplier-badge-mobile" class="text-[10px] font-black text-amber-300 bg-amber-500/20 px-1 rounded">3.0x</span>
+        </div>
+        <span>Pontos: <strong id="score-count-mobile" class="text-amber-300">0</strong></span>
+        <span>Movs: <strong id="move-count-mobile" class="text-white">0</strong></span>
+        <span>Conjuntos: <strong id="completed-sets-mobile" class="text-emerald-300">0/8</strong></span>
+    </div>
+
+    <!-- MAIN BOARD AREA -->
+    <main id="game-board" class="flex-1 max-w-5xl w-full mx-auto px-2 py-3 flex flex-col gap-4 justify-start transition duration-300">
+        
+        <!-- TOP SECTION: Stock, Waste, Stock Recycle Info & Foundations -->
+        <section class="flex flex-wrap justify-between items-center gap-3">
+            <!-- Stock & Waste (Left side) -->
+            <div class="flex items-center gap-3">
+                <!-- Stock Pile Slot -->
+                <div class="flex flex-col items-center">
+                    <div class="flex items-center justify-between w-full mb-0.5 px-0.5">
+                        <span class="text-[10px] text-emerald-200 uppercase font-bold tracking-wider">Monte</span>
+                        <span id="stock-recycle-info" class="text-[9px] text-amber-300/90 font-semibold" title="Reciclagens restantes">∞</span>
+                    </div>
+                    <div id="stock-slot" class="glass-card-slot relative flex items-center justify-center cursor-pointer hover:border-amber-400/70 transition">
+                        <div id="stock-card" class="hidden game-card card-back"></div>
+                        <div id="stock-empty-icon" class="text-emerald-300/40 text-xl font-bold">🔄</div>
+                        <div id="stock-count-badge" class="absolute -bottom-2 -right-1 bg-slate-900/90 text-amber-300 font-black text-[10px] px-1.5 py-0.2 rounded-full border border-amber-400/40 shadow">0</div>
+                    </div>
+                </div>
+
+                <!-- Waste Pile Slot -->
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] text-emerald-200 uppercase font-bold tracking-wider mb-0.5">Lixeira</span>
+                    <div id="waste-slot" class="glass-card-slot relative flex items-center justify-center">
+                        <!-- Card drawn from stock goes here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Target Foundations: 4 Equivalency Slots -->
+            <div class="flex flex-col items-end">
+                <div class="flex items-center gap-2 mb-0.5">
+                    <span class="text-[10px] text-amber-300 uppercase font-bold tracking-wider">Montes de Equivalência</span>
+                    <span class="text-[10px] text-emerald-300/80">(Junte 4 equivalentes)</span>
+                </div>
+                <div class="flex gap-1.5 sm:gap-2" id="foundations-container">
+                    <div id="foundation-0" class="foundation-slot glass-card-slot relative flex items-center justify-center" data-foundation-idx="0">
+                        <span class="text-xs text-white/30 font-bold">1</span>
+                    </div>
+                    <div id="foundation-1" class="foundation-slot glass-card-slot relative flex items-center justify-center" data-foundation-idx="1">
+                        <span class="text-xs text-white/30 font-bold">2</span>
+                    </div>
+                    <div id="foundation-2" class="foundation-slot glass-card-slot relative flex items-center justify-center" data-foundation-idx="2">
+                        <span class="text-xs text-white/30 font-bold">3</span>
+                    </div>
+                    <div id="foundation-3" class="foundation-slot glass-card-slot relative flex items-center justify-center" data-foundation-idx="3">
+                        <span class="text-xs text-white/30 font-bold">4</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TABLEAU SECTION -->
+        <section class="flex-1 flex flex-col">
+            <div class="flex justify-between items-center mb-1">
+                <span class="text-[11px] text-emerald-200 font-medium">Mesa (Agrupe cartas de MESMO valor nas colunas):</span>
+                <span id="diff-indicator-badge" class="text-[10px] px-2 py-0.5 rounded font-bold bg-blue-900/60 text-sky-200 border border-sky-400/40">Médio</span>
+            </div>
+            
+            <div id="tableau-container" class="flex justify-around items-start gap-1 sm:gap-2 min-h-[350px] pb-12">
+                <!-- Dynamically populated according to difficulty (4, 5 or 6 columns) -->
+            </div>
+        </section>
+    </main>
+
+    <!-- TOAST NOTIFICATION FOR EDUCATIONAL HINTS -->
+    <div id="toast-container" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-11/12 max-w-md pointer-events-none transition-all duration-300 opacity-0 translate-y-4">
+        <div id="toast-content" class="bg-slate-900/95 border-2 border-amber-500 text-amber-100 p-3 rounded-xl shadow-2xl text-xs sm:text-sm font-medium leading-snug flex items-center gap-2.5 backdrop-blur-md">
+            <span class="text-2xl">💡</span>
+            <div id="toast-text" class="flex-1">Dica de jogada aqui</div>
+        </div>
+    </div>
+
+    <!-- DRAG CONTAINER OVERLAY -->
+    <div id="drag-layer"></div>
+
+    <!-- PAUSE OVERLAY -->
+    <div id="pause-overlay" class="fixed inset-0 z-40 flex flex-col items-center justify-center p-4">
+        <div class="bg-slate-900/95 border-2 border-amber-400/80 rounded-2xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl flex flex-col items-center gap-4">
+            <div class="text-5xl animate-pulse">⏸️</div>
+            <h2 class="text-2xl font-black text-amber-400 tracking-wide">JOGO PAUSADO</h2>
+            <p class="text-xs sm:text-sm text-slate-300">
+                O cronômetro está congelado. Respire fundo e retorne ao desafio a qualquer momento!
+            </p>
+            <div class="text-xs text-emerald-300/80 font-mono">
+                Tempo atual: <span id="pause-modal-time" class="text-white font-bold">00:00</span>
+            </div>
+            <button id="btn-resume" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black px-6 py-2.5 rounded-xl text-sm shadow-lg transform transition active:scale-95">
+                ▶️ Retomar Jogo
+            </button>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="glass-panel text-center py-1.5 text-[11px] text-emerald-300/70 border-t border-white/10 flex items-center justify-center gap-4">
+        <span>Paciência Racional &bull; Equivalências Matemáticas</span>
+        <span class="hidden sm:inline text-white/30">|</span>
+        <span class="hidden sm:inline text-white/50">Atalhos: [Espaço] Monte &bull; [Ctrl+Z] Desfazer &bull; [H] Dica &bull; [P] Pausa</span>
+    </footer>
+
+    <!-- MODAL: STATS & RECORDS -->
+    <div id="modal-stats" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-3">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-5 sm:p-6 text-white shadow-2xl flex flex-col gap-4 max-h-[92vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2">
+                    📊 Estatísticas & Recordes
+                </h2>
+                <button class="modal-close text-slate-400 hover:text-white text-2xl font-bold px-2">&times;</button>
+            </div>
+
+            <!-- Stats Difficulty Tabs -->
+            <div class="flex gap-1 border-b border-slate-800 pb-2 overflow-x-auto text-xs" id="stats-tabs">
+                <button data-tab="facil" class="stats-tab px-3 py-1.5 rounded-lg font-bold bg-amber-500 text-slate-950">Fácil</button>
+                <button data-tab="medio" class="stats-tab px-3 py-1.5 rounded-lg font-bold bg-slate-800 hover:bg-slate-700 text-slate-300">Médio</button>
+                <button data-tab="dificil" class="stats-tab px-3 py-1.5 rounded-lg font-bold bg-slate-800 hover:bg-slate-700 text-slate-300">Difícil</button>
+                <button data-tab="insano" class="stats-tab px-3 py-1.5 rounded-lg font-bold bg-slate-800 hover:bg-slate-700 text-slate-300">Insano</button>
+            </div>
+
+            <!-- Stats Content Cards -->
+            <div id="stats-tab-content" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                <div class="bg-slate-800/80 border border-slate-700 p-3 rounded-xl flex flex-col">
+                    <span class="text-[10px] text-slate-400 uppercase font-semibold">Partidas Jogadas</span>
+                    <span id="stat-played" class="text-lg font-black text-white mt-1">0</span>
+                </div>
+                <div class="bg-slate-800/80 border border-slate-700 p-3 rounded-xl flex flex-col">
+                    <span class="text-[10px] text-slate-400 uppercase font-semibold">Vitórias</span>
+                    <span id="stat-won" class="text-lg font-black text-emerald-400 mt-1">0</span>
+                </div>
+                <div class="bg-slate-800/80 border border-slate-700 p-3 rounded-xl flex flex-col">
+                    <span class="text-[10px] text-slate-400 uppercase font-semibold">Taxa de Vitória</span>
+                    <span id="stat-winrate" class="text-lg font-black text-sky-400 mt-1">0%</span>
+                </div>
+                <div class="bg-slate-800/80 border border-slate-700 p-3 rounded-xl flex flex-col">
+                    <span class="text-[10px] text-slate-400 uppercase font-semibold">Melhor Tempo</span>
+                    <span id="stat-best-time" class="text-lg font-black text-amber-400 mt-1 font-mono">--:--</span>
+                </div>
+                <div class="bg-slate-800/80 border border-slate-700 p-3 rounded-xl flex flex-col">
+                    <span class="text-[10px] text-slate-400 uppercase font-semibold">Menor Nº Movimentos</span>
+                    <span id="stat-fewest-moves" class="text-lg font-black text-purple-400 mt-1">--</span>
+                </div>
+                <div class="bg-slate-800/80 border border-slate-700 p-3 rounded-xl flex flex-col">
+                    <span class="text-[10px] text-slate-400 uppercase font-semibold">Recorde de Pontos</span>
+                    <span id="stat-best-score" class="text-lg font-black text-yellow-300 mt-1">0</span>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center pt-2 border-t border-slate-800">
+                <button id="btn-reset-stats" class="text-rose-400 hover:text-rose-300 text-xs font-semibold underline">
+                    Zerar Estatísticas Deste Nível
+                </button>
+                <button class="modal-close bg-slate-700 hover:bg-slate-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: THEMES / CUSTOMIZATION -->
+    <div id="modal-theme" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-3">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-5 text-white shadow-2xl flex flex-col gap-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2">
+                    🎨 Personalizar Visual
+                </h2>
+                <button class="modal-close text-slate-400 hover:text-white text-2xl font-bold px-2">&times;</button>
+            </div>
+
+            <!-- Felt Color -->
+            <div class="space-y-2">
+                <label class="text-xs font-bold text-slate-300 uppercase tracking-wider">Cor da Mesa (Feltro):</label>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <button class="theme-felt-btn p-2.5 rounded-xl border-2 border-emerald-500 bg-emerald-950/80 text-emerald-200 font-bold flex items-center gap-2" data-theme-val="felt-green">
+                        <span class="w-4 h-4 rounded-full bg-emerald-600 inline-block border border-white"></span> Verde Cassino
+                    </button>
+                    <button class="theme-felt-btn p-2.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 font-bold flex items-center gap-2" data-theme-val="ocean-blue">
+                        <span class="w-4 h-4 rounded-full bg-blue-700 inline-block border border-white"></span> Azul Oceano
+                    </button>
+                    <button class="theme-felt-btn p-2.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 font-bold flex items-center gap-2" data-theme-val="royal-purple">
+                        <span class="w-4 h-4 rounded-full bg-purple-700 inline-block border border-white"></span> Púrpura Real
+                    </button>
+                    <button class="theme-felt-btn p-2.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 font-bold flex items-center gap-2" data-theme-val="dark-obsidian">
+                        <span class="w-4 h-4 rounded-full bg-slate-900 inline-block border border-white"></span> Obsidiana Negra
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card Back Style -->
+            <div class="space-y-2">
+                <label class="text-xs font-bold text-slate-300 uppercase tracking-wider">Verso das Cartas:</label>
+                <div class="grid grid-cols-3 gap-2 text-xs">
+                    <button class="card-back-btn p-2 rounded-xl border-2 border-amber-400 bg-slate-800 text-center font-bold" data-back-val="blue">
+                        <div class="w-full h-8 rounded bg-gradient-to-br from-blue-900 to-blue-600 mb-1 border border-white/50"></div>
+                        Azul Safira
+                    </button>
+                    <button class="card-back-btn p-2 rounded-xl border border-slate-700 bg-slate-800 text-center font-bold" data-back-val="gold">
+                        <div class="w-full h-8 rounded bg-gradient-to-br from-amber-900 to-amber-600 mb-1 border border-white/50"></div>
+                        Dourado Real
+                    </button>
+                    <button class="card-back-btn p-2 rounded-xl border border-slate-700 bg-slate-800 text-center font-bold" data-back-val="ruby">
+                        <div class="w-full h-8 rounded bg-gradient-to-br from-rose-900 to-rose-600 mb-1 border border-white/50"></div>
+                        Rubi Imperial
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2 border-t border-slate-800">
+                <button class="modal-close bg-amber-600 hover:bg-amber-500 text-white px-5 py-1.5 rounded-lg text-xs font-bold">
+                    Salvar e Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: EQUIVALENCY GUIDE / TABLE -->
+    <div id="modal-guide" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-3">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-5 sm:p-6 text-white shadow-2xl flex flex-col gap-4 max-h-[92vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h2 class="text-lg font-bold text-emerald-400 flex items-center gap-2">
+                    📖 Tabela de Equivalências Racionais
+                </h2>
+                <button class="modal-close text-slate-400 hover:text-white text-2xl font-bold px-2">&times;</button>
+            </div>
+            
+            <p class="text-xs text-slate-300">
+                Todas as famílias de números equivalentes presentes no jogo. Cada conjunto é formado por 4 cartas idênticas em valor:
+            </p>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-700 text-amber-300">
+                            <th class="py-2 px-2">Fração</th>
+                            <th class="py-2 px-2">Equivalente</th>
+                            <th class="py-2 px-2">Decimal</th>
+                            <th class="py-2 px-2">Porcentagem</th>
+                            <th class="py-2 px-2 text-center">Gráfico</th>
+                            <th class="py-2 px-2">Nível Mínimo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="guide-table-body" class="divide-y divide-slate-800">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex justify-end pt-2 border-t border-slate-800">
+                <button class="modal-close bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-1.5 rounded-lg text-xs font-bold">
+                    Fechar Guia
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: HOW TO PLAY / RULES -->
+    <div id="modal-rules" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+        <div class="bg-slate-900 border border-slate-700 rounded-xl max-w-lg w-full p-4 sm:p-6 text-white shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2">
+                    📜 Como Jogar - Paciência das Equivalências
+                </h2>
+                <button class="modal-close text-slate-400 hover:text-white text-xl font-bold px-2">&times;</button>
+            </div>
+
+            <div class="space-y-3 text-xs sm:text-sm text-slate-300 leading-relaxed">
+                <div class="bg-emerald-950/60 border border-emerald-700/60 p-3 rounded-lg">
+                    <h3 class="font-bold text-emerald-300 mb-1">🎯 Objetivo do Jogo:</h3>
+                    <p>Reunir e completar todos os <strong>conjuntos de cartas equivalentes</strong>. Cada conjunto possui 4 representações do mesmo valor racional (Fração simplificada, Fração equivalente, Decimal/Porcentagem e Gráfico Pizza).</p>
+                </div>
+
+                <div class="space-y-2">
+                    <h3 class="font-bold text-amber-300">⚙️ Regras do Jogo:</h3>
+                    <ul class="list-disc list-inside space-y-1.5 pl-1">
+                        <li><strong>Nos Montes de Equivalência (Topo):</strong> Coloque qualquer carta num monte vazio. As cartas seguintes nesse monte <strong>DEVEM ter o mesmo valor racional (equivalente)</strong>!</li>
+                        <li><strong>Completar um Monte:</strong> Ao juntar 4 cartas equivalentes em um Monte, ele é <strong>concluído com festa</strong> e libera espaço para um novo conjunto!</li>
+                        <li><strong>Na Mesa (Colunas):</strong> Você pode empilhar cartas de <strong>mesmo valor equivalente</strong> para organizá-las antes de mover para os montes. Qualquer carta pode ser colocada em uma coluna vazia.</li>
+                        <li><strong>⏱️ Temporizador & Multiplicador:</strong> O tempo é progressivo! Quanto mais rápido você concluir a partida, maior será o seu <strong>multiplicador de pontuação (até 3.0x)</strong>!</li>
+                    </ul>
+                </div>
+
+                <div class="bg-slate-800 p-3 rounded-lg border border-slate-700">
+                    <h4 class="font-bold text-sky-300 mb-1">💡 Exemplo de Cartas Equivalentes:</h4>
+                    <p class="text-xs">
+                        <strong class="text-amber-300">1/2</strong> &equals; <strong class="text-emerald-300">2/4</strong> &equals; <strong class="text-sky-300">0,5 (50%)</strong> &equals; <strong class="text-indigo-300">Gráfico de meio círculo</strong>
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2 border-t border-slate-800">
+                <button class="modal-close bg-amber-600 hover:bg-amber-500 text-white px-5 py-2 rounded-lg text-xs font-bold shadow">
+                    Entendi, Vamos Jogar!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: VICTORY -->
+    <div id="modal-victory" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-3">
+        <canvas id="victory-canvas" class="fixed inset-0 pointer-events-none z-10"></canvas>
+        <div class="bg-slate-900 border-2 border-amber-400 rounded-2xl max-w-md w-full p-6 text-white text-center shadow-2xl z-20 flex flex-col items-center gap-4">
+            <div class="text-5xl animate-bounce">🏆 🎉</div>
+            <h2 class="text-2xl font-black text-amber-400">PARABÉNS! VOCÊ VENCEU!</h2>
+            <p class="text-xs sm:text-sm text-slate-300" id="vic-subtitle">
+                Você agrupou com sucesso todas as famílias de valores equivalentes!
+            </p>
+
+            <div class="bg-slate-800/90 border border-slate-700 rounded-xl p-3.5 w-full flex flex-col gap-2 text-xs">
+                <div class="flex justify-between items-center border-b border-slate-700/60 pb-1.5">
+                    <span class="text-slate-400">Tempo Final:</span>
+                    <span id="vic-time" class="font-mono font-bold text-white text-sm">00:00</span>
+                </div>
+                <div class="flex justify-between items-center border-b border-slate-700/60 pb-1.5">
+                    <span class="text-slate-400">Multiplicador de Tempo:</span>
+                    <span id="vic-time-mult" class="font-black text-amber-300 text-sm">3.0x ⚡</span>
+                </div>
+                <div class="flex justify-between items-center border-b border-slate-700/60 pb-1.5">
+                    <span class="text-slate-400">Multiplicador de Nível:</span>
+                    <span id="vic-diff-mult" class="font-bold text-sky-300 text-sm">1.5x</span>
+                </div>
+                <div class="flex justify-between items-center border-b border-slate-700/60 pb-1.5">
+                    <span class="text-slate-400">Movimentos Totais:</span>
+                    <span id="vic-moves" class="font-bold text-white text-sm">0</span>
+                </div>
+                <div class="flex justify-between items-center pt-1 text-sm">
+                    <span class="font-bold text-amber-300">PONTUAÇÃO FINAL:</span>
+                    <span id="vic-score" class="font-black text-amber-400 text-xl">0</span>
+                </div>
+            </div>
+
+            <div class="flex gap-2 w-full">
+                <button id="btn-vic-stats" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-lg text-xs border border-white/20 transition">
+                    Ver Estatísticas 📊
+                </button>
+                <button id="btn-vic-restart" class="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black py-2.5 rounded-lg text-xs shadow-lg transform transition active:scale-95">
+                    Jogar Novamente 🔄
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ==========================================================================
+           1. AUDIO SYNTHESIZER (Web Audio API)
+           ========================================================================== */
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playTone(freq, duration = 0.08, type = 'sine', gainVal = 0.15) {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {
+                    console.warn(e);
+                }
+            }
+
+            playFlip() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(320, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(160, this.ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            }
+
+            playMove() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(380, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(540, this.ctx.currentTime + 0.09);
+                gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.09);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.09);
+            }
+
+            playMatch() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.setValueAtTime(659.25, now + 0.08);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(now + 0.2);
+            }
+
+            playCompleteSet() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    const startTime = now + idx * 0.07;
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, startTime);
+                    gain.gain.setValueAtTime(0.25, startTime);
+                    gain.gain.linearRampToValueAtTime(0.01, startTime + 0.3);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(startTime);
+                    osc.stop(startTime + 0.3);
+                });
+            }
+
+            playError() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, this.ctx.currentTime);
+                osc.frequency.setValueAtTime(150, this.ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.18);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.18);
+            }
+
+            playVictory() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const notes = [440, 554.37, 659.25, 880, 1108.73, 1318.51];
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    const startTime = this.ctx.currentTime + idx * 0.12;
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, startTime);
+                    gain.gain.setValueAtTime(0.3, startTime);
+                    gain.gain.linearRampToValueAtTime(0.01, startTime + 0.45);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(startTime);
+                    osc.stop(startTime + 0.45);
+                });
+            }
+        }
+
+        const soundEngine = new SoundEngine();
+
+        /* ==========================================================================
+           2. RATIONAL NUMBERS DATASET (Expanded to 10 families)
+           ========================================================================== */
+        const EQUIVALENT_FAMILIES = [
+            { id: 1, val: 0.2,    label: "1/5",  eqLabel: "2/10", decStr: "0,2",  pctStr: "20%",   num: 1, den: 5,  eqNum: 2, eqDen: 10, minLevel: 'facil' },
+            { id: 2, val: 0.25,   label: "1/4",  eqLabel: "2/8",  decStr: "0,25", pctStr: "25%",   num: 1, den: 4,  eqNum: 2, eqDen: 8,  minLevel: 'facil' },
+            { id: 3, val: 1/3,    label: "1/3",  eqLabel: "2/6",  decStr: "0,33", pctStr: "33,3%", num: 1, den: 3,  eqNum: 2, eqDen: 6,  minLevel: 'medio' },
+            { id: 4, val: 0.4,    label: "2/5",  eqLabel: "4/10", decStr: "0,4",  pctStr: "40%",   num: 2, den: 5,  eqNum: 4, eqDen: 10, minLevel: 'facil' },
+            { id: 5, val: 0.5,    label: "1/2",  eqLabel: "2/4",  decStr: "0,5",  pctStr: "50%",   num: 1, den: 2,  eqNum: 2, eqDen: 4,  minLevel: 'facil' },
+            { id: 6, val: 0.6,    label: "3/5",  eqLabel: "6/10", decStr: "0,6",  pctStr: "60%",   num: 3, den: 5,  eqNum: 6, eqDen: 10, minLevel: 'facil' },
+            { id: 7, val: 2/3,    label: "2/3",  eqLabel: "4/6",  decStr: "0,67", pctStr: "66,7%", num: 2, den: 3,  eqNum: 4, eqDen: 6,  minLevel: 'medio' },
+            { id: 8, val: 0.75,   label: "3/4",  eqLabel: "6/8",  decStr: "0,75", pctStr: "75%",   num: 3, den: 4,  eqNum: 6, eqDen: 8,  minLevel: 'facil' },
+            // Extra families for Insano (Improper / Mixed numbers)
+            { id: 9,  val: 1.25,  label: "5/4",  eqLabel: "10/8", decStr: "1,25", pctStr: "125%",  num: 5, den: 4,  eqNum: 10, eqDen: 8, minLevel: 'insano', isMixed: true, mixedStr: "1 1/4" },
+            { id: 10, val: 1.5,   label: "3/2",  eqLabel: "6/4",  decStr: "1,5",  pctStr: "150%",  num: 3, den: 2,  eqNum: 6, eqDen: 4,  minLevel: 'insano', isMixed: true, mixedStr: "1 1/2" }
+        ];
+
+        /* Difficulty Configuration */
+        const DIFFICULTY_CONFIGS = {
+            facil: {
+                name: 'Fácil',
+                familyCount: 6,
+                tableauCols: 4,
+                allFaceUp: true,
+                maxStockRecycles: Infinity,
+                diffMultiplier: 1.0,
+                badgeDecimalHelper: true,
+                badgeColor: 'bg-emerald-800 text-emerald-200 border-emerald-500'
+            },
+            medio: {
+                name: 'Médio',
+                familyCount: 8,
+                tableauCols: 5,
+                allFaceUp: false,
+                maxStockRecycles: Infinity,
+                diffMultiplier: 1.5,
+                badgeDecimalHelper: true,
+                badgeColor: 'bg-blue-800 text-sky-200 border-sky-500'
+            },
+            dificil: {
+                name: 'Difícil',
+                familyCount: 8,
+                tableauCols: 5,
+                allFaceUp: false,
+                maxStockRecycles: 2,
+                diffMultiplier: 2.0,
+                badgeDecimalHelper: false,
+                badgeColor: 'bg-amber-800 text-amber-200 border-amber-500'
+            },
+            insano: {
+                name: 'Insano',
+                familyCount: 10,
+                tableauCols: 6,
+                allFaceUp: false,
+                maxStockRecycles: 1,
+                diffMultiplier: 3.0,
+                badgeDecimalHelper: false,
+                badgeColor: 'bg-rose-900 text-rose-200 border-rose-500'
+            }
+        };
+
+        function generatePieSVG(num, den, isMixed = false) {
+            if (!isMixed) {
+                let paths = '';
+                const cx = 25, cy = 25, r = 20;
+                for (let i = 0; i < den; i++) {
+                    const startAngle = (i * 2 * Math.PI) / den - Math.PI / 2;
+                    const endAngle = ((i + 1) * 2 * Math.PI) / den - Math.PI / 2;
+                    const x1 = cx + r * Math.cos(startAngle);
+                    const y1 = cy + r * Math.sin(startAngle);
+                    const x2 = cx + r * Math.cos(endAngle);
+                    const y2 = cy + r * Math.sin(endAngle);
+                    const largeArc = (endAngle - startAngle) > Math.PI ? 1 : 0;
+                    const filled = i < num;
+                    const fill = filled ? '#6366f1' : '#f1f5f9';
+                    const stroke = '#312e81';
+                    const d = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+                    paths += `<path d="${d}" fill="${fill}" stroke="${stroke}" stroke-width="1.2"/>`;
+                }
+                return `<svg viewBox="0 0 50 50" class="w-full h-full drop-shadow-sm">${paths}</svg>`;
+            } else {
+                return `
+                <div class="flex items-center justify-center gap-0.5 w-full h-full">
+                    <svg viewBox="0 0 50 50" class="w-1/2 h-full drop-shadow-sm">
+                        <circle cx="25" cy="25" r="20" fill="#6366f1" stroke="#312e81" stroke-width="2"/>
+                    </svg>
+                    <svg viewBox="0 0 50 50" class="w-1/2 h-full drop-shadow-sm">
+                        <circle cx="25" cy="25" r="20" fill="#f1f5f9" stroke="#312e81" stroke-width="2"/>
+                        <path d="M 25 25 L 25 5 A 20 20 0 0 1 ${num === 5 ? '45 25' : '25 45'} Z" fill="#6366f1" stroke="#312e81" stroke-width="1.5"/>
+                    </svg>
+                </div>`;
+            }
+        }
+
+        function createDeckForDifficulty(diffLevel) {
+            const config = DIFFICULTY_CONFIGS[diffLevel];
+            const families = EQUIVALENT_FAMILIES.slice(0, config.familyCount);
+            const deck = [];
+            let cardId = 1;
+
+            families.forEach(fam => {
+                // 1. Simplified Fraction
+                deck.push({
+                    id: cardId++,
+                    familyId: fam.id,
+                    val: fam.val,
+                    type: 'frac',
+                    typeLabel: fam.isMixed ? 'Misto' : 'Fração',
+                    badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+                    num: fam.num,
+                    den: fam.den,
+                    decStr: fam.decStr,
+                    pctStr: fam.pctStr,
+                    isMixed: fam.isMixed,
+                    mixedStr: fam.mixedStr,
+                    mainText: fam.isMixed ? fam.mixedStr : `${fam.num}/${fam.den}`
+                });
+
+                // 2. Equivalent Fraction
+                deck.push({
+                    id: cardId++,
+                    familyId: fam.id,
+                    val: fam.val,
+                    type: 'eq_frac',
+                    typeLabel: 'Equivalente',
+                    badgeColor: 'bg-amber-100 text-amber-800 border-amber-300',
+                    num: fam.eqNum,
+                    den: fam.eqDen,
+                    decStr: fam.decStr,
+                    pctStr: fam.pctStr,
+                    isMixed: fam.isMixed,
+                    mainText: `${fam.eqNum}/${fam.eqDen}`
+                });
+
+                // 3. Decimal & Percentage
+                deck.push({
+                    id: cardId++,
+                    familyId: fam.id,
+                    val: fam.val,
+                    type: 'dec_pct',
+                    typeLabel: 'Decimal / %',
+                    badgeColor: 'bg-sky-100 text-sky-800 border-sky-300',
+                    num: fam.num,
+                    den: fam.den,
+                    decStr: fam.decStr,
+                    pctStr: fam.pctStr,
+                    mainText: `${fam.decStr}`
+                });
+
+                // 4. Figural (SVG Chart)
+                deck.push({
+                    id: cardId++,
+                    familyId: fam.id,
+                    val: fam.val,
+                    type: 'figural',
+                    typeLabel: 'Figura',
+                    badgeColor: 'bg-indigo-100 text-indigo-800 border-indigo-300',
+                    num: fam.num,
+                    den: fam.den,
+                    decStr: fam.decStr,
+                    pctStr: fam.pctStr,
+                    isMixed: fam.isMixed,
+                    mainText: `${fam.num}/${fam.den}`
+                });
+            });
+
+            return { deck, totalSets: families.length };
+        }
+
+        /* ==========================================================================
+           3. PROGRESSIVE TIMER & REALTIME SCORE MULTIPLIER ENGINE
+           ========================================================================== */
+        class TimerEngine {
+            constructor() {
+                this.elapsedSeconds = 0;
+                this.interval = null;
+                this.isRunning = false;
+                this.isPaused = false;
+            }
+
+            start() {
+                if (this.isRunning) return;
+                this.isRunning = true;
+                this.isPaused = false;
+                this.updateDisplays();
+                this.interval = setInterval(() => {
+                    if (!this.isPaused) {
+                        this.elapsedSeconds++;
+                        this.updateDisplays();
+                    }
+                }, 1000);
+            }
+
+            pause() {
+                this.isPaused = true;
+            }
+
+            resume() {
+                this.isPaused = false;
+            }
+
+            reset() {
+                clearInterval(this.interval);
+                this.interval = null;
+                this.elapsedSeconds = 0;
+                this.isRunning = false;
+                this.isPaused = false;
+                this.updateDisplays();
+            }
+
+            formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            }
+
+            getTimeMultiplier() {
+                const s = this.elapsedSeconds;
+                if (s < 120) return 3.0;      // < 2 mins: 3.0x ⚡⚡⚡
+                if (s < 240) return 2.5;      // 2 - 4 mins: 2.5x ⚡⚡
+                if (s < 360) return 2.0;      // 4 - 6 mins: 2.0x ⚡
+                if (s < 540) return 1.5;      // 6 - 9 mins: 1.5x ✨
+                if (s < 780) return 1.2;      // 9 - 13 mins: 1.2x
+                return 1.0;                  // > 13 mins: 1.0x baseline
+            }
+
+            updateDisplays() {
+                const formatted = this.formatTime(this.elapsedSeconds);
+                const mult = this.getTimeMultiplier();
+                const multText = `${mult.toFixed(1)}x ${mult >= 2.0 ? '⚡' : ''}`;
+
+                const timerEl = document.getElementById('timer-display');
+                const timerElMobile = document.getElementById('timer-display-mobile');
+                const multBadge = document.getElementById('multiplier-badge');
+                const multBadgeMobile = document.getElementById('multiplier-badge-mobile');
+
+                if (timerEl) timerEl.innerText = formatted;
+                if (timerElMobile) timerElMobile.innerText = formatted;
+                if (multBadge) multBadge.innerText = multText;
+                if (multBadgeMobile) multBadgeMobile.innerText = multText;
+            }
+        }
+
+        const timerEngine = new TimerEngine();
+
+        /* ==========================================================================
+           4. PERSISTENT STATS & RECORDS MANAGER (localStorage)
+           ========================================================================== */
+        class StatsManager {
+            constructor() {
+                this.storageKey = 'paciencia_racional_stats_v2';
+                this.stats = this.loadStats();
+            }
+
+            loadStats() {
+                try {
+                    const raw = localStorage.getItem(this.storageKey);
+                    if (raw) return JSON.parse(raw);
+                } catch (e) {
+                    console.warn(e);
+                }
+                return {
+                    facil: { played: 0, won: 0, bestTime: null, fewestMoves: null, bestScore: 0 },
+                    medio: { played: 0, won: 0, bestTime: null, fewestMoves: null, bestScore: 0 },
+                    dificil: { played: 0, won: 0, bestTime: null, fewestMoves: null, bestScore: 0 },
+                    insano: { played: 0, won: 0, bestTime: null, fewestMoves: null, bestScore: 0 }
+                };
+            }
+
+            saveStats() {
+                try {
+                    localStorage.setItem(this.storageKey, JSON.stringify(this.stats));
+                } catch (e) {
+                    console.warn(e);
+                }
+            }
+
+            recordGameStarted(diffLevel) {
+                if (!this.stats[diffLevel]) return;
+                this.stats[diffLevel].played++;
+                this.saveStats();
+            }
+
+            recordVictory(diffLevel, timeSeconds, moves, score) {
+                if (!this.stats[diffLevel]) return;
+                const s = this.stats[diffLevel];
+                s.won++;
+                if (s.bestTime === null || timeSeconds < s.bestTime) s.bestTime = timeSeconds;
+                if (s.fewestMoves === null || moves < s.fewestMoves) s.fewestMoves = moves;
+                if (score > s.bestScore) s.bestScore = score;
+                this.saveStats();
+            }
+
+            resetDifficulty(diffLevel) {
+                if (this.stats[diffLevel]) {
+                    this.stats[diffLevel] = { played: 0, won: 0, bestTime: null, fewestMoves: null, bestScore: 0 };
+                    this.saveStats();
+                }
+            }
+        }
+
+        const statsManager = new StatsManager();
+
+        /* ==========================================================================
+           5. GAME STATE MANAGEMENT
+           ========================================================================== */
+        const gameState = {
+            difficulty: 'medio',
+            stock: [],
+            waste: [],
+            foundations: [[], [], [], []], // 4 target equivalence slots
+            tableau: [],                   // 4, 5, or 6 columns
+            totalSetsTarget: 8,
+            completedSetsCount: 0,
+            rawScore: 0,
+            moveCount: 0,
+            stockRecyclesRemaining: Infinity,
+            moveHistory: [],
+            selectedCardInfo: null,
+            hasGameStarted: false
+        };
+
+        function incrementMove() {
+            gameState.moveCount++;
+            document.getElementById('move-count').innerText = gameState.moveCount;
+            document.getElementById('move-count-mobile').innerText = gameState.moveCount;
+        }
+
+        function addScore(points) {
+            gameState.rawScore = Math.max(0, gameState.rawScore + points);
+            updateScoreDisplays();
+        }
+
+        function updateScoreDisplays() {
+            const diffConfig = DIFFICULTY_CONFIGS[gameState.difficulty];
+            const currentTotal = Math.round(gameState.rawScore * diffConfig.diffMultiplier * timerEngine.getTimeMultiplier());
+            document.getElementById('score-count').innerText = currentTotal;
+            document.getElementById('score-count-mobile').innerText = currentTotal;
+        }
+
+        function saveSnapshot() {
+            const snapshot = {
+                stock: JSON.parse(JSON.stringify(gameState.stock)),
+                waste: JSON.parse(JSON.stringify(gameState.waste)),
+                foundations: JSON.parse(JSON.stringify(gameState.foundations)),
+                tableau: JSON.parse(JSON.stringify(gameState.tableau)),
+                completedSetsCount: gameState.completedSetsCount,
+                rawScore: gameState.rawScore,
+                moveCount: gameState.moveCount,
+                stockRecyclesRemaining: gameState.stockRecyclesRemaining
+            };
+            gameState.moveHistory.push(snapshot);
+        }
+
+        function undoLastMove() {
+            if (gameState.moveHistory.length === 0) {
+                showToast("Nenhum movimento para desfazer!");
+                return;
+            }
+            const previous = gameState.moveHistory.pop();
+            gameState.stock = previous.stock;
+            gameState.waste = previous.waste;
+            gameState.foundations = previous.foundations;
+            gameState.tableau = previous.tableau;
+            gameState.completedSetsCount = previous.completedSetsCount;
+            gameState.rawScore = previous.rawScore;
+            gameState.moveCount = previous.moveCount;
+            gameState.stockRecyclesRemaining = previous.stockRecyclesRemaining;
+
+            document.getElementById('move-count').innerText = gameState.moveCount;
+            document.getElementById('move-count-mobile').innerText = gameState.moveCount;
+            updateScoreDisplays();
+            updateSetsDisplay();
+            updateStockRecycleDisplay();
+
+            clearSelection();
+            renderBoard();
+            soundEngine.playFlip();
+            showToast("Movimento desfeito!");
+        }
+
+        function updateSetsDisplay() {
+            const text = `${gameState.completedSetsCount}/${gameState.totalSetsTarget}`;
+            document.getElementById('completed-sets-count').innerText = text;
+            document.getElementById('completed-sets-mobile').innerText = text;
+        }
+
+        function updateStockRecycleDisplay() {
+            const el = document.getElementById('stock-recycle-info');
+            if (!el) return;
+            if (gameState.stockRecyclesRemaining === Infinity) {
+                el.innerText = '∞';
+                el.title = 'Reciclagens ilimitadas';
+            } else {
+                el.innerText = `Rec: ${gameState.stockRecyclesRemaining}`;
+                el.title = `${gameState.stockRecyclesRemaining} reciclagem(ns) restante(s)`;
+            }
+        }
+
+        /* ==========================================================================
+           6. CARD DOM RENDERER
+           ========================================================================== */
+        function renderCardElement(card, isFaceUp = true) {
+            const cardEl = document.createElement('div');
+            cardEl.dataset.cardId = card.id;
+
+            if (!isFaceUp) {
+                cardEl.className = 'game-card card-back';
+                return cardEl;
+            }
+
+            cardEl.className = 'game-card select-none';
+            const diffConfig = DIFFICULTY_CONFIGS[gameState.difficulty];
+
+            let innerHTML = '';
+
+            if (card.type === 'frac') {
+                innerHTML = `
+                    <div class="flex justify-between items-start w-full leading-none">
+                        <span class="text-[9px] font-bold px-1 py-0.5 rounded border ${card.badgeColor}">${card.typeLabel}</span>
+                    </div>
+                    <div class="my-auto flex justify-center items-center text-slate-900">
+                        ${card.isMixed ? `
+                            <div class="flex items-center gap-1">
+                                <span class="text-base sm:text-lg font-black text-emerald-900">1</span>
+                                <div class="fraction-display text-sm sm:text-base text-emerald-900">
+                                    <span class="fraction-numerator">${card.num - card.den}</span>
+                                    <span class="fraction-denominator">${card.den}</span>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="fraction-display text-base sm:text-lg">
+                                <span class="fraction-numerator">${card.num}</span>
+                                <span class="fraction-denominator">${card.den}</span>
+                            </div>
+                        `}
+                    </div>
+                    <div class="text-[9px] text-slate-500 font-bold text-center">${diffConfig.badgeDecimalHelper ? card.decStr : card.mainText}</div>
+                `;
+            } else if (card.type === 'eq_frac') {
+                innerHTML = `
+                    <div class="flex justify-between items-start w-full leading-none">
+                        <span class="text-[9px] font-bold px-1 py-0.5 rounded border ${card.badgeColor}">${card.typeLabel}</span>
+                    </div>
+                    <div class="my-auto flex justify-center items-center text-amber-900">
+                        <div class="fraction-display text-base sm:text-lg">
+                            <span class="fraction-numerator">${card.num}</span>
+                            <span class="fraction-denominator">${card.den}</span>
+                        </div>
+                    </div>
+                    <div class="text-[9px] text-amber-700 font-bold text-center">${diffConfig.badgeDecimalHelper ? card.decStr : `${card.num}/${card.den}`}</div>
+                `;
+            } else if (card.type === 'dec_pct') {
+                innerHTML = `
+                    <div class="flex justify-between items-start w-full leading-none">
+                        <span class="text-[9px] font-bold px-1 py-0.5 rounded border ${card.badgeColor}">${card.typeLabel}</span>
+                    </div>
+                    <div class="my-auto flex flex-col items-center justify-center leading-tight">
+                        <span class="text-sm sm:text-base font-black text-sky-950">${card.decStr}</span>
+                        <span class="text-[10px] sm:text-xs font-bold text-sky-600">${card.pctStr}</span>
+                    </div>
+                    <div class="text-[9px] text-sky-800 font-bold text-center">${card.pctStr}</div>
+                `;
+            } else if (card.type === 'figural') {
+                const pieSvg = generatePieSVG(card.num, card.den, card.isMixed);
+                innerHTML = `
+                    <div class="flex justify-between items-start w-full leading-none">
+                        <span class="text-[9px] font-bold px-1 py-0.5 rounded border ${card.badgeColor}">${card.typeLabel}</span>
+                    </div>
+                    <div class="my-auto w-8 h-8 sm:w-10 sm:h-10 mx-auto flex items-center justify-center">
+                        ${pieSvg}
+                    </div>
+                    <div class="text-[9px] text-indigo-800 font-bold text-center">${diffConfig.badgeDecimalHelper ? card.decStr : 'Figura'}</div>
+                `;
+            }
+
+            cardEl.innerHTML = innerHTML;
+            return cardEl;
+        }
+
+        function renderBoard() {
+            // Render Stock
+            const stockCard = document.getElementById('stock-card');
+            const stockEmptyIcon = document.getElementById('stock-empty-icon');
+            const stockCountBadge = document.getElementById('stock-count-badge');
+
+            if (gameState.stock.length > 0) {
+                stockCard.classList.remove('hidden');
+                stockEmptyIcon.classList.add('hidden');
+                stockCountBadge.innerText = gameState.stock.length;
+                stockCountBadge.classList.remove('hidden');
+            } else {
+                stockCard.classList.add('hidden');
+                stockEmptyIcon.classList.remove('hidden');
+                if (gameState.waste.length > 0 && gameState.stockRecyclesRemaining > 0) {
+                    stockEmptyIcon.innerText = '🔄';
+                    stockCountBadge.innerText = '0';
+                    stockCountBadge.classList.add('hidden');
+                } else {
+                    stockEmptyIcon.innerText = '🚫';
+                    stockCountBadge.classList.add('hidden');
+                }
+            }
+
+            // Render Waste
+            const wasteSlot = document.getElementById('waste-slot');
+            wasteSlot.innerHTML = '';
+            if (gameState.waste.length > 0) {
+                const topWasteCard = gameState.waste[gameState.waste.length - 1];
+                const cardEl = renderCardElement(topWasteCard, true);
+                
+                if (isCardSelected('waste', null, gameState.waste.length - 1)) {
+                    cardEl.classList.add('selected');
+                }
+                wasteSlot.appendChild(cardEl);
+            }
+
+            // Render Foundations (4)
+            for (let i = 0; i < 4; i++) {
+                const fSlot = document.getElementById(`foundation-${i}`);
+                if (!fSlot) continue;
+                fSlot.innerHTML = '';
+                const fPile = gameState.foundations[i];
+
+                if (fPile.length > 0) {
+                    const topCard = fPile[fPile.length - 1];
+                    const cardEl = renderCardElement(topCard, true);
+                    
+                    const countBadge = document.createElement('div');
+                    countBadge.className = 'absolute -top-2 -right-2 bg-amber-500 text-slate-950 font-black text-xs w-5 h-5 rounded-full flex items-center justify-center border-2 border-slate-900 shadow z-10';
+                    countBadge.innerText = fPile.length;
+                    
+                    fSlot.appendChild(cardEl);
+                    fSlot.appendChild(countBadge);
+                } else {
+                    fSlot.innerHTML = `<span class="text-xs text-white/30 font-bold">${i+1}</span>`;
+                }
+
+                if (gameState.selectedCardInfo && isValidFoundationMove(getSelectedCard(), i)) {
+                    fSlot.classList.add('valid-target');
+                } else {
+                    fSlot.classList.remove('valid-target');
+                }
+            }
+
+            // Render Tableau Columns
+            const colCount = gameState.tableau.length;
+
+            for (let colIdx = 0; colIdx < colCount; colIdx++) {
+                const colEl = document.getElementById(`tableau-${colIdx}`);
+                if (!colEl) continue;
+                colEl.innerHTML = '';
+                const columnCards = gameState.tableau[colIdx];
+
+                columnCards.forEach((item, cardIdx) => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'tableau-card-wrapper';
+                    const yOffset = window.innerWidth < 640 ? 22 : 30;
+                    wrapper.style.top = `${cardIdx * yOffset}px`;
+
+                    const cardEl = renderCardElement(item.card, item.faceUp);
+                    
+                    if (item.faceUp && isCardSelected('tableau', colIdx, cardIdx)) {
+                        cardEl.classList.add('selected');
+                    }
+
+                    wrapper.appendChild(cardEl);
+                    colEl.appendChild(wrapper);
+                });
+
+                if (gameState.selectedCardInfo && isValidTableauMove(getSelectedStack(), colIdx)) {
+                    colEl.classList.add('valid-target');
+                } else {
+                    colEl.classList.remove('valid-target');
+                }
+            }
+
+            updateSetsDisplay();
+            updateScoreDisplays();
+            checkAutoCompleteEligibility();
+            checkVictory();
+        }
+
+        function isCardSelected(source, colIdx, cardIdx) {
+            if (!gameState.selectedCardInfo) return false;
+            const sel = gameState.selectedCardInfo;
+            return sel.source === source && sel.colIdx === colIdx && sel.cardIdx === cardIdx;
+        }
+
+        function getSelectedCard() {
+            if (!gameState.selectedCardInfo) return null;
+            return gameState.selectedCardInfo.card;
+        }
+
+        function getSelectedStack() {
+            if (!gameState.selectedCardInfo) return [];
+            const sel = gameState.selectedCardInfo;
+            if (sel.source === 'waste') {
+                return [{ card: sel.card, faceUp: true }];
+            } else if (sel.source === 'tableau') {
+                return gameState.tableau[sel.colIdx].slice(sel.cardIdx);
+            }
+            return [];
+        }
+
+        function clearSelection() {
+            gameState.selectedCardInfo = null;
+            document.querySelectorAll('.game-card.selected').forEach(el => el.classList.remove('selected'));
+            document.querySelectorAll('.valid-target').forEach(el => el.classList.remove('valid-target'));
+            document.querySelectorAll('.hint-highlight').forEach(el => el.classList.remove('hint-highlight'));
+        }
+
+        /* ==========================================================================
+           7. EQUIVALENCE VALIDATION & MOVES
+           ========================================================================== */
+        function isValidFoundationMove(card, foundationIdx) {
+            if (!card) return false;
+            const fPile = gameState.foundations[foundationIdx];
+            if (fPile.length === 0) {
+                return true;
+            }
+            const existingVal = fPile[0].val;
+            return Math.abs(card.val - existingVal) < 0.0001;
+        }
+
+        function isValidTableauMove(movingStack, targetColIdx) {
+            if (!movingStack || movingStack.length === 0) return false;
+            const targetCol = gameState.tableau[targetColIdx];
+            if (targetCol.length === 0) {
+                return true;
+            }
+
+            const topTargetItem = targetCol[targetCol.length - 1];
+            if (!topTargetItem.faceUp) return false;
+
+            const targetVal = topTargetItem.card.val;
+            const bottomMovingVal = movingStack[0].card.val;
+
+            return Math.abs(targetVal - bottomMovingVal) < 0.0001;
+        }
+
+        function triggerGameStart() {
+            if (!gameState.hasGameStarted) {
+                gameState.hasGameStarted = true;
+                timerEngine.start();
+                statsManager.recordGameStarted(gameState.difficulty);
+            }
+        }
+
+        function drawStock() {
+            triggerGameStart();
+
+            if (gameState.stock.length > 0) {
+                saveSnapshot();
+                const card = gameState.stock.pop();
+                gameState.waste.push(card);
+                incrementMove();
+                soundEngine.playFlip();
+                clearSelection();
+                renderBoard();
+            } else if (gameState.waste.length > 0) {
+                if (gameState.stockRecyclesRemaining <= 0) {
+                    soundEngine.playError();
+                    showToast("⚠️ O limite de reciclagens do monte foi atingido nesta dificuldade!");
+                    return;
+                }
+
+                saveSnapshot();
+                if (gameState.stockRecyclesRemaining !== Infinity) {
+                    gameState.stockRecyclesRemaining--;
+                }
+                updateStockRecycleDisplay();
+
+                gameState.stock = gameState.waste.reverse();
+                gameState.waste = [];
+                incrementMove();
+                soundEngine.playFlip();
+                clearSelection();
+                renderBoard();
+                showToast("Lixeira reciclada de volta para o monte!");
+            }
+        }
+
+        function executeMove(sourceInfo, destinationInfo) {
+            triggerGameStart();
+            saveSnapshot();
+
+            let movedCards = [];
+
+            if (sourceInfo.type === 'waste') {
+                movedCards = [gameState.waste.pop()];
+            } else if (sourceInfo.type === 'tableau') {
+                const col = gameState.tableau[sourceInfo.colIdx];
+                const countToMove = col.length - sourceInfo.cardIdx;
+                movedCards = col.splice(sourceInfo.cardIdx, countToMove).map(item => item.card);
+
+                if (col.length > 0 && !col[col.length - 1].faceUp) {
+                    col[col.length - 1].faceUp = true;
+                }
+            }
+
+            if (destinationInfo.type === 'tableau') {
+                movedCards.forEach(c => {
+                    gameState.tableau[destinationInfo.colIdx].push({ card: c, faceUp: true });
+                });
+                soundEngine.playMove();
+                addScore(10);
+            } else if (destinationInfo.type === 'foundation') {
+                const fIdx = destinationInfo.foundationIdx;
+                movedCards.forEach(c => gameState.foundations[fIdx].push(c));
+                soundEngine.playMatch();
+                addScore(25);
+
+                checkAndCompleteFoundation(fIdx);
+            }
+
+            incrementMove();
+            clearSelection();
+            renderBoard();
+        }
+
+        function checkAndCompleteFoundation(fIdx) {
+            const fPile = gameState.foundations[fIdx];
+            if (fPile.length === 4) {
+                gameState.completedSetsCount++;
+                addScore(120);
+                soundEngine.playCompleteSet();
+
+                const fSlot = document.getElementById(`foundation-${fIdx}`);
+                if (fSlot) fSlot.classList.add('completed-anim');
+
+                showToast(`🎉 **Parabéns!** Você completou o conjunto equivalente de **${fPile[0].decStr} (${fPile[0].pctStr})**!`);
+
+                setTimeout(() => {
+                    if (fSlot) fSlot.classList.remove('completed-anim');
+                    gameState.foundations[fIdx] = [];
+                    renderBoard();
+                }, 650);
+            }
+        }
+
+        function autoMoveCard(card, sourceInfo) {
+            triggerGameStart();
+
+            // 1. Try matching Foundation
+            for (let fIdx = 0; fIdx < 4; fIdx++) {
+                if (isValidFoundationMove(card, fIdx)) {
+                    executeMove(sourceInfo, { type: 'foundation', foundationIdx: fIdx });
+                    return true;
+                }
+            }
+
+            // 2. Try matching Tableau column (non-empty)
+            for (let tIdx = 0; tIdx < gameState.tableau.length; tIdx++) {
+                if (sourceInfo.type === 'tableau' && sourceInfo.colIdx === tIdx) continue;
+                if (gameState.tableau[tIdx].length > 0 && isValidTableauMove([{ card, faceUp: true }], tIdx)) {
+                    executeMove(sourceInfo, { type: 'tableau', colIdx: tIdx });
+                    return true;
+                }
+            }
+
+            // 3. Try empty Tableau column
+            for (let tIdx = 0; tIdx < gameState.tableau.length; tIdx++) {
+                if (sourceInfo.type === 'tableau' && sourceInfo.colIdx === tIdx) continue;
+                if (gameState.tableau[tIdx].length === 0) {
+                    executeMove(sourceInfo, { type: 'tableau', colIdx: tIdx });
+                    return true;
+                }
+            }
+
+            soundEngine.playError();
+            explainInvalidMove(card);
+            return false;
+        }
+
+        function explainInvalidMove(card) {
+            showToast(`⚠️ **Atenção**: Procure uma carta com valor equivalente a **${card.mainText} (${card.decStr})** em um dos Montes ou Colunas!`);
+        }
+
+        function showToast(text, duration = 3800) {
+            const container = document.getElementById('toast-container');
+            const toastText = document.getElementById('toast-text');
+            toastText.innerHTML = text;
+            container.classList.remove('opacity-0', 'translate-y-4');
+            container.classList.add('opacity-100', 'translate-y-0');
+
+            if (window.toastTimeout) clearTimeout(window.toastTimeout);
+            window.toastTimeout = setTimeout(() => {
+                container.classList.remove('opacity-100', 'translate-y-0');
+                container.classList.add('opacity-0', 'translate-y-4');
+            }, duration);
+        }
+
+        /* ==========================================================================
+           8. AUTO-COMPLETE ENGINE
+           ========================================================================== */
+        function checkAutoCompleteEligibility() {
+            const btn = document.getElementById('btn-auto-complete');
+            if (!btn) return;
+
+            let hasFaceDown = false;
+            for (let col of gameState.tableau) {
+                for (let item of col) {
+                    if (!item.faceUp) {
+                        hasFaceDown = true;
+                        break;
+                    }
+                }
+                if (hasFaceDown) break;
+            }
+
+            if (!hasFaceDown && gameState.stock.length === 0 && gameState.waste.length === 0 && gameState.completedSetsCount < gameState.totalSetsTarget) {
+                btn.classList.remove('hidden');
+            } else {
+                btn.classList.add('hidden');
+            }
+        }
+
+        function runAutoCompleteSequence() {
+            const btn = document.getElementById('btn-auto-complete');
+            btn.classList.add('hidden');
+
+            const interval = setInterval(() => {
+                let moved = false;
+                for (let c = 0; c < gameState.tableau.length; c++) {
+                    const col = gameState.tableau[c];
+                    if (col.length > 0) {
+                        const topCard = col[col.length - 1].card;
+                        for (let f = 0; f < 4; f++) {
+                            if (isValidFoundationMove(topCard, f)) {
+                                executeMove({ type: 'tableau', colIdx: c, cardIdx: col.length - 1 }, { type: 'foundation', foundationIdx: f });
+                                moved = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (moved) break;
+                }
+
+                if (!moved || gameState.completedSetsCount >= gameState.totalSetsTarget) {
+                    clearInterval(interval);
+                }
+            }, 250);
+        }
+
+        /* ==========================================================================
+           9. DRAG & DROP AND TOUCH EVENT ENGINE
+           ========================================================================== */
+        let dragSession = null;
+
+        function initPointerControls() {
+            const board = document.body;
+
+            board.addEventListener('pointerdown', handlePointerDown);
+            board.addEventListener('pointermove', handlePointerMove);
+            board.addEventListener('pointerup', handlePointerUp);
+            board.addEventListener('pointercancel', handlePointerUp);
+
+            document.getElementById('stock-slot').addEventListener('click', (e) => {
+                e.preventDefault();
+                drawStock();
+            });
+        }
+
+        function handlePointerDown(e) {
+            const cardEl = e.target.closest('.game-card');
+
+            if (cardEl && cardEl.id === 'stock-card') return;
+
+            if (!cardEl) {
+                const fSlot = e.target.closest('.foundation-slot');
+                const tCol = e.target.closest('.tableau-column');
+
+                if (gameState.selectedCardInfo) {
+                    if (fSlot) {
+                        attemptSelectedCardMove({ type: 'foundation', foundationIdx: parseInt(fSlot.dataset.foundationIdx) });
+                        return;
+                    } else if (tCol) {
+                        attemptSelectedCardMove({ type: 'tableau', colIdx: parseInt(tCol.dataset.tableauIdx) });
+                        return;
+                    }
+                }
+
+                if (!e.target.closest('button') && !e.target.closest('select') && !e.target.closest('.modal-close')) {
+                    clearSelection();
+                    renderBoard();
+                }
+                return;
+            }
+
+            const cardId = parseInt(cardEl.dataset.cardId);
+            if (!cardId) return;
+
+            let sourceInfo = null;
+
+            if (gameState.waste.length > 0 && gameState.waste[gameState.waste.length - 1].id === cardId) {
+                sourceInfo = { type: 'waste', card: gameState.waste[gameState.waste.length - 1] };
+            } else {
+                for (let colIdx = 0; colIdx < gameState.tableau.length; colIdx++) {
+                    const col = gameState.tableau[colIdx];
+                    for (let cardIdx = 0; cardIdx < col.length; cardIdx++) {
+                        if (col[cardIdx].card.id === cardId && col[cardIdx].faceUp) {
+                            sourceInfo = {
+                                type: 'tableau',
+                                colIdx,
+                                cardIdx,
+                                card: col[cardIdx].card,
+                                stack: col.slice(cardIdx)
+                            };
+                            break;
+                        }
+                    }
+                    if (sourceInfo) break;
+                }
+            }
+
+            if (!sourceInfo) return;
+
+            const now = Date.now();
+            if (cardEl.lastTapTime && (now - cardEl.lastTapTime < 320)) {
+                autoMoveCard(sourceInfo.card, sourceInfo);
+                cardEl.lastTapTime = 0;
+                return;
+            }
+            cardEl.lastTapTime = now;
+
+            dragSession = {
+                startX: e.clientX,
+                startY: e.clientY,
+                currentX: e.clientX,
+                currentY: e.clientY,
+                isDragging: false,
+                sourceInfo,
+                cardEl,
+                dragGhostEl: null
+            };
+        }
+
+        function handlePointerMove(e) {
+            if (!dragSession) return;
+
+            dragSession.currentX = e.clientX;
+            dragSession.currentY = e.clientY;
+
+            const dist = Math.hypot(dragSession.currentX - dragSession.startX, dragSession.currentY - dragSession.startY);
+
+            if (!dragSession.isDragging && dist > 6) {
+                dragSession.isDragging = true;
+                createDragGhost();
+            }
+
+            if (dragSession.isDragging && dragSession.dragGhostEl) {
+                dragSession.dragGhostEl.style.left = `${e.clientX - dragSession.offsetX}px`;
+                dragSession.dragGhostEl.style.top = `${e.clientY - dragSession.offsetY}px`;
+            }
+        }
+
+        function createDragGhost() {
+            const dragLayer = document.getElementById('drag-layer');
+            dragLayer.innerHTML = '';
+
+            const ghostStack = document.createElement('div');
+            ghostStack.className = 'dragging-card-stack';
+
+            const rect = dragSession.cardEl.getBoundingClientRect();
+            dragSession.offsetX = dragSession.startX - rect.left;
+            dragSession.offsetY = dragSession.startY - rect.top;
+
+            let cardsToRender = [];
+            if (dragSession.sourceInfo.type === 'waste') {
+                cardsToRender = [dragSession.sourceInfo.card];
+            } else if (dragSession.sourceInfo.type === 'tableau') {
+                cardsToRender = dragSession.sourceInfo.stack.map(item => item.card);
+            }
+
+            cardsToRender.forEach((c, idx) => {
+                const cardEl = renderCardElement(c, true);
+                cardEl.style.position = 'absolute';
+                const yOffset = window.innerWidth < 640 ? 22 : 30;
+                cardEl.style.top = `${idx * yOffset}px`;
+                ghostStack.appendChild(cardEl);
+            });
+
+            ghostStack.style.left = `${dragSession.startX - dragSession.offsetX}px`;
+            ghostStack.style.top = `${dragSession.startY - dragSession.offsetY}px`;
+
+            dragLayer.appendChild(ghostStack);
+            dragSession.dragGhostEl = ghostStack;
+        }
+
+        function handlePointerUp(e) {
+            if (!dragSession) return;
+
+            if (dragSession.isDragging) {
+                document.getElementById('drag-layer').innerHTML = '';
+                const dropTarget = findDropTarget(e.clientX, e.clientY);
+
+                if (dropTarget) {
+                    processDrop(dragSession.sourceInfo, dropTarget);
+                } else {
+                    soundEngine.playError();
+                }
+            } else {
+                handleCardTap(dragSession.sourceInfo);
+            }
+
+            dragSession = null;
+        }
+
+        function handleCardTap(sourceInfo) {
+            if (!gameState.selectedCardInfo) {
+                gameState.selectedCardInfo = {
+                    source: sourceInfo.type,
+                    colIdx: sourceInfo.colIdx,
+                    cardIdx: sourceInfo.cardIdx,
+                    card: sourceInfo.card
+                };
+                soundEngine.playFlip();
+                renderBoard();
+            } else {
+                if (sourceInfo.type === 'tableau') {
+                    attemptSelectedCardMove({ type: 'tableau', colIdx: sourceInfo.colIdx });
+                } else {
+                    clearSelection();
+                    renderBoard();
+                }
+            }
+        }
+
+        function findDropTarget(x, y) {
+            const elements = document.elementsFromPoint(x, y);
+            for (let el of elements) {
+                const fSlot = el.closest('.foundation-slot');
+                if (fSlot) {
+                    return { type: 'foundation', foundationIdx: parseInt(fSlot.dataset.foundationIdx) };
+                }
+                const tCol = el.closest('.tableau-column');
+                if (tCol) {
+                    return { type: 'tableau', colIdx: parseInt(tCol.dataset.tableauIdx) };
+                }
+            }
+            return null;
+        }
+
+        function processDrop(sourceInfo, targetInfo) {
+            let movingCards = [];
+            if (sourceInfo.type === 'waste') {
+                movingCards = [{ card: sourceInfo.card, faceUp: true }];
+            } else if (sourceInfo.type === 'tableau') {
+                movingCards = sourceInfo.stack;
+            }
+
+            if (targetInfo.type === 'tableau') {
+                if (sourceInfo.type === 'tableau' && sourceInfo.colIdx === targetInfo.colIdx) return;
+
+                if (isValidTableauMove(movingCards, targetInfo.colIdx)) {
+                    executeMove(sourceInfo, targetInfo);
+                } else {
+                    soundEngine.playError();
+                    explainInvalidMove(movingCards[0].card);
+                }
+            } else if (targetInfo.type === 'foundation') {
+                if (movingCards.length === 1 && isValidFoundationMove(movingCards[0].card, targetInfo.foundationIdx)) {
+                    executeMove(sourceInfo, targetInfo);
+                } else {
+                    soundEngine.playError();
+                    explainInvalidMove(movingCards[0].card);
+                }
+            }
+        }
+
+        function attemptSelectedCardMove(targetInfo) {
+            if (!gameState.selectedCardInfo) return;
+            const sel = gameState.selectedCardInfo;
+            let sourceInfo = null;
+
+            if (sel.source === 'waste') {
+                sourceInfo = { type: 'waste', card: gameState.waste[gameState.waste.length - 1] };
+            } else if (sel.source === 'tableau') {
+                const col = gameState.tableau[sel.colIdx];
+                sourceInfo = {
+                    type: 'tableau',
+                    colIdx: sel.colIdx,
+                    cardIdx: sel.cardIdx,
+                    card: sel.card,
+                    stack: col.slice(sel.cardIdx)
+                };
+            }
+
+            if (sourceInfo) {
+                processDrop(sourceInfo, targetInfo);
+            }
+        }
+
+        /* ==========================================================================
+           10. HINTS & VICTORY
+           ========================================================================== */
+        function generateHint() {
+            clearSelection();
+
+            // 1. Check Waste to Foundation
+            if (gameState.waste.length > 0) {
+                const wasteCard = gameState.waste[gameState.waste.length - 1];
+                for (let f = 0; f < 4; f++) {
+                    if (isValidFoundationMove(wasteCard, f)) {
+                        highlightHintElement('#waste-slot .game-card', `#foundation-${f}`);
+                        showToast(`💡 **Dica**: A carta **${wasteCard.mainText} (${wasteCard.decStr})** pode ir para o **Monte ${f+1}**!`);
+                        return;
+                    }
+                }
+            }
+
+            // 2. Check Tableau to Foundation
+            for (let c = 0; c < gameState.tableau.length; c++) {
+                const col = gameState.tableau[c];
+                if (col.length > 0) {
+                    const topCard = col[col.length - 1].card;
+                    for (let f = 0; f < 4; f++) {
+                        if (isValidFoundationMove(topCard, f)) {
+                            highlightHintElement(`#tableau-${c} .tableau-card-wrapper:last-child .game-card`, `#foundation-${f}`);
+                            showToast(`💡 **Dica**: A carta **${topCard.mainText} (${topCard.decStr})** da Coluna ${c+1} pode ir para o **Monte ${f+1}**!`);
+                            return;
+                        }
+                    }
+                }
+            }
+
+            // 3. Check Tableau to Tableau
+            for (let c = 0; c < gameState.tableau.length; c++) {
+                const col = gameState.tableau[c];
+                if (col.length > 0) {
+                    const topCard = col[col.length - 1].card;
+                    for (let t = 0; t < gameState.tableau.length; t++) {
+                        if (t === c) continue;
+                        if (gameState.tableau[t].length > 0 && isValidTableauMove([{ card: topCard, faceUp: true }], t)) {
+                            highlightHintElement(`#tableau-${c} .tableau-card-wrapper:last-child .game-card`, `#tableau-${t}`);
+                            showToast(`💡 **Dica**: Agrupe **${topCard.mainText}** com sua equivalente na Coluna ${t+1}!`);
+                            return;
+                        }
+                    }
+                }
+            }
+
+            // 4. Draw from stock
+            if (gameState.stock.length > 0 || (gameState.waste.length > 0 && gameState.stockRecyclesRemaining > 0)) {
+                highlightHintElement('#stock-slot');
+                showToast("💡 **Dica**: Clique no **Monte** para revelar novas cartas!");
+                return;
+            }
+
+            showToast("Nenhuma jogada óbvia encontrada! Tente desfazer um movimento.");
+        }
+
+        function highlightHintElement(sourceSelector, targetSelector = null) {
+            const src = document.querySelector(sourceSelector);
+            if (src) src.classList.add('hint-highlight');
+            if (targetSelector) {
+                const tgt = document.querySelector(targetSelector);
+                if (tgt) tgt.classList.add('hint-highlight');
+            }
+            setTimeout(() => {
+                document.querySelectorAll('.hint-highlight').forEach(el => el.classList.remove('hint-highlight'));
+            }, 3000);
+        }
+
+        function checkVictory() {
+            if (gameState.completedSetsCount >= gameState.totalSetsTarget) {
+                timerEngine.pause();
+                soundEngine.playVictory();
+
+                const diffConfig = DIFFICULTY_CONFIGS[gameState.difficulty];
+                const timeMult = timerEngine.getTimeMultiplier();
+                const finalScore = Math.round(gameState.rawScore * diffConfig.diffMultiplier * timeMult);
+
+                document.getElementById('vic-time').innerText = timerEngine.formatTime(timerEngine.elapsedSeconds);
+                document.getElementById('vic-time-mult').innerText = `${timeMult.toFixed(1)}x ⚡`;
+                document.getElementById('vic-diff-mult').innerText = `${diffConfig.diffMultiplier.toFixed(1)}x (${diffConfig.name})`;
+                document.getElementById('vic-moves').innerText = gameState.moveCount;
+                document.getElementById('vic-score').innerText = finalScore;
+                document.getElementById('vic-subtitle').innerText = `Você completou todas as ${gameState.totalSetsTarget} famílias de equivalências no nível ${diffConfig.name}!`;
+
+                statsManager.recordVictory(gameState.difficulty, timerEngine.elapsedSeconds, gameState.moveCount, finalScore);
+
+                document.getElementById('modal-victory').classList.remove('hidden');
+                launchConfetti();
+            }
+        }
+
+        function launchConfetti() {
+            const canvas = document.getElementById('victory-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6', '#eab308'];
+
+            for (let i = 0; i < 140; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    vx: (Math.random() - 0.5) * 5,
+                    vy: Math.random() * 4 + 2.5,
+                    size: Math.random() * 9 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rotation: Math.random() * Math.PI * 2,
+                    vRot: (Math.random() - 0.5) * 0.12
+                });
+            }
+
+            function animateConfetti() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.rotation += p.vRot;
+
+                    if (p.y > canvas.height) p.y = -20;
+
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rotation);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                    ctx.restore();
+                });
+
+                if (!document.getElementById('modal-victory').classList.contains('hidden')) {
+                    requestAnimationFrame(animateConfetti);
+                }
+            }
+            animateConfetti();
+        }
+
+        /* ==========================================================================
+           11. GAME INITIALIZATION & DIFFICULTY SETUP
+           ========================================================================== */
+        function initNewGame(difficulty = null) {
+            if (difficulty) {
+                gameState.difficulty = difficulty;
+            }
+            const diffConfig = DIFFICULTY_CONFIGS[gameState.difficulty];
+
+            const selectEl = document.getElementById('select-difficulty');
+            if (selectEl) selectEl.value = gameState.difficulty;
+
+            const badgeEl = document.getElementById('diff-indicator-badge');
+            if (badgeEl) {
+                badgeEl.innerText = diffConfig.name;
+                badgeEl.className = `text-[10px] px-2 py-0.5 rounded font-bold ${diffConfig.badgeColor}`;
+            }
+
+            timerEngine.reset();
+            gameState.hasGameStarted = false;
+
+            const { deck: fullDeck, totalSets } = createDeckForDifficulty(gameState.difficulty);
+            gameState.totalSetsTarget = totalSets;
+
+            for (let i = fullDeck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [fullDeck[i], fullDeck[j]] = [fullDeck[j], fullDeck[i]];
+            }
+
+            const tableauContainer = document.getElementById('tableau-container');
+            tableauContainer.innerHTML = '';
+            gameState.tableau = [];
+
+            for (let col = 0; col < diffConfig.tableauCols; col++) {
+                gameState.tableau.push([]);
+                const colSlot = document.createElement('div');
+                colSlot.id = `tableau-${col}`;
+                colSlot.className = 'tableau-column glass-card-slot';
+                colSlot.dataset.tableauIdx = col;
+                tableauContainer.appendChild(colSlot);
+            }
+
+            let cardIdx = 0;
+            for (let col = 0; col < diffConfig.tableauCols; col++) {
+                const cardsInCol = col + 1;
+                for (let row = 0; row < cardsInCol; row++) {
+                    const card = fullDeck[cardIdx++];
+                    const isFaceUp = diffConfig.allFaceUp || (row === col);
+                    gameState.tableau[col].push({ card, faceUp: isFaceUp });
+                }
+            }
+
+            gameState.stock = [];
+            while (cardIdx < fullDeck.length) {
+                gameState.stock.push(fullDeck[cardIdx++]);
+            }
+
+            gameState.waste = [];
+            gameState.foundations = [[], [], [], []];
+            gameState.completedSetsCount = 0;
+            gameState.rawScore = 0;
+            gameState.moveCount = 0;
+            gameState.stockRecyclesRemaining = diffConfig.maxStockRecycles;
+            gameState.moveHistory = [];
+
+            document.getElementById('move-count').innerText = 0;
+            document.getElementById('move-count-mobile').innerText = 0;
+            updateScoreDisplays();
+            updateSetsDisplay();
+            updateStockRecycleDisplay();
+
+            clearSelection();
+            renderBoard();
+
+            showToast(`🎮 Partida iniciada no nível **${diffConfig.name}**! Aproveite o multiplicador de tempo!`, 3500);
+        }
+
+        /* ==========================================================================
+           12. STATS MODAL & THEME LOGIC
+           ========================================================================== */
+        function openStatsModal(activeTab = null) {
+            const currentTab = activeTab || gameState.difficulty;
+            renderStatsTab(currentTab);
+            document.getElementById('modal-stats').classList.remove('hidden');
+        }
+
+        function renderStatsTab(tabName) {
+            document.querySelectorAll('.stats-tab').forEach(btn => {
+                if (btn.dataset.tab === tabName) {
+                    btn.className = 'stats-tab px-3 py-1.5 rounded-lg font-bold bg-amber-500 text-slate-950 shadow';
+                } else {
+                    btn.className = 'stats-tab px-3 py-1.5 rounded-lg font-bold bg-slate-800 hover:bg-slate-700 text-slate-300';
+                }
+            });
+
+            const s = statsManager.stats[tabName];
+            if (!s) return;
+
+            document.getElementById('stat-played').innerText = s.played;
+            document.getElementById('stat-won').innerText = s.won;
+            const rate = s.played > 0 ? Math.round((s.won / s.played) * 100) : 0;
+            document.getElementById('stat-winrate').innerText = `${rate}%`;
+            document.getElementById('stat-best-time').innerText = s.bestTime !== null ? timerEngine.formatTime(s.bestTime) : '--:--';
+            document.getElementById('stat-fewest-moves').innerText = s.fewestMoves !== null ? s.fewestMoves : '--';
+            document.getElementById('stat-best-score').innerText = s.bestScore || 0;
+
+            document.getElementById('btn-reset-stats').dataset.tab = tabName;
+        }
+
+        function initThemes() {
+            const savedFelt = localStorage.getItem('paciencia_felt_theme') || 'felt-green';
+            const savedBack = localStorage.getItem('paciencia_card_back') || 'blue';
+            applyTheme(savedFelt, savedBack);
+        }
+
+        function applyTheme(feltVal, backVal) {
+            document.body.setAttribute('data-theme', feltVal);
+            document.body.setAttribute('data-card-back', backVal);
+            localStorage.setItem('paciencia_felt_theme', feltVal);
+            localStorage.setItem('paciencia_card_back', backVal);
+
+            document.querySelectorAll('.theme-felt-btn').forEach(b => {
+                if (b.dataset.themeVal === feltVal) {
+                    b.classList.add('border-emerald-500', 'border-2');
+                    b.classList.remove('border-slate-700');
+                } else {
+                    b.classList.remove('border-emerald-500', 'border-2');
+                    b.classList.add('border-slate-700');
+                }
+            });
+
+            document.querySelectorAll('.card-back-btn').forEach(b => {
+                if (b.dataset.backVal === backVal) {
+                    b.classList.add('border-amber-400', 'border-2');
+                    b.classList.remove('border-slate-700');
+                } else {
+                    b.classList.remove('border-amber-400', 'border-2');
+                    b.classList.add('border-slate-700');
+                }
+            });
+        }
+
+        function populateGuideTable() {
+            const tbody = document.getElementById('guide-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            EQUIVALENT_FAMILIES.forEach(fam => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-800/60 transition';
+                const pieSvg = generatePieSVG(fam.num, fam.den, fam.isMixed);
+
+                tr.innerHTML = `
+                    <td class="py-2.5 px-2 font-black text-emerald-300">${fam.isMixed ? fam.mixedStr : `${fam.num}/${fam.den}`}</td>
+                    <td class="py-2.5 px-2 font-bold text-amber-300">${fam.eqNum}/${fam.eqDen}</td>
+                    <td class="py-2.5 px-2 font-mono font-bold text-sky-300">${fam.decStr}</td>
+                    <td class="py-2.5 px-2 font-bold text-sky-400">${fam.pctStr}</td>
+                    <td class="py-2.5 px-2 text-center w-12 h-12">
+                        <div class="w-8 h-8 mx-auto">${pieSvg}</div>
+                    </td>
+                    <td class="py-2.5 px-2">
+                        <span class="text-[10px] px-2 py-0.5 rounded font-bold ${fam.minLevel === 'insano' ? 'bg-rose-900/60 text-rose-300 border border-rose-500' : (fam.minLevel === 'medio' ? 'bg-blue-900/60 text-sky-300 border border-sky-500' : 'bg-emerald-900/60 text-emerald-300 border border-emerald-500')}">
+                            ${fam.minLevel.toUpperCase()}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        /* ==========================================================================
+           13. PAUSE & KEYBOARD SHORTCUTS
+           ========================================================================== */
+        function togglePause() {
+            if (!gameState.hasGameStarted) return;
+            const overlay = document.getElementById('pause-overlay');
+            if (timerEngine.isPaused) {
+                timerEngine.resume();
+                overlay.classList.remove('active');
+                document.getElementById('btn-pause-icon').innerText = '⏸️';
+            } else {
+                timerEngine.pause();
+                document.getElementById('pause-modal-time').innerText = timerEngine.formatTime(timerEngine.elapsedSeconds);
+                overlay.classList.add('active');
+                document.getElementById('btn-pause-icon').innerText = '▶️';
+            }
+        }
+
+        function setupKeyboardShortcuts() {
+            window.addEventListener('keydown', (e) => {
+                if (['input', 'select', 'textarea'].includes(e.target.tagName.toLowerCase())) return;
+
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    drawStock();
+                } else if ((e.ctrlKey && e.key === 'z') || e.key === 'u' || e.key === 'U') {
+                    e.preventDefault();
+                    undoLastMove();
+                } else if (e.key === 'h' || e.key === 'H') {
+                    e.preventDefault();
+                    generateHint();
+                } else if (e.key === 'p' || e.key === 'P') {
+                    e.preventDefault();
+                    togglePause();
+                } else if (e.key === 'm' || e.key === 'M') {
+                    e.preventDefault();
+                    soundEngine.enabled = !soundEngine.enabled;
+                    document.getElementById('btn-sound').innerText = soundEngine.enabled ? '🔊' : '🔇';
+                } else if (e.key === 'n' || e.key === 'N') {
+                    e.preventDefault();
+                    if (confirm("Iniciar uma nova partida?")) initNewGame();
+                }
+            });
+        }
+
+        /* ==========================================================================
+           14. UI EVENT LISTENERS
+           ========================================================================== */
+        function setupUIEventListeners() {
+            document.getElementById('select-difficulty').addEventListener('change', (e) => {
+                initNewGame(e.target.value);
+            });
+
+            document.getElementById('btn-hint').addEventListener('click', generateHint);
+            document.getElementById('btn-undo').addEventListener('click', undoLastMove);
+            document.getElementById('btn-pause').addEventListener('click', togglePause);
+            document.getElementById('btn-resume').addEventListener('click', togglePause);
+
+            document.getElementById('btn-auto-complete').addEventListener('click', runAutoCompleteSequence);
+
+            document.getElementById('btn-restart').addEventListener('click', () => {
+                initNewGame();
+            });
+
+            document.getElementById('btn-vic-restart').addEventListener('click', () => {
+                document.getElementById('modal-victory').classList.add('hidden');
+                initNewGame();
+            });
+
+            document.getElementById('btn-vic-stats').addEventListener('click', () => {
+                document.getElementById('modal-victory').classList.add('hidden');
+                openStatsModal();
+            });
+
+            document.getElementById('btn-sound').addEventListener('click', () => {
+                soundEngine.enabled = !soundEngine.enabled;
+                document.getElementById('btn-sound').innerText = soundEngine.enabled ? '🔊' : '🔇';
+            });
+
+            document.getElementById('btn-rules').addEventListener('click', () => {
+                document.getElementById('modal-rules').classList.remove('hidden');
+            });
+
+            document.getElementById('btn-guide').addEventListener('click', () => {
+                populateGuideTable();
+                document.getElementById('modal-guide').classList.remove('hidden');
+            });
+
+            document.getElementById('btn-stats').addEventListener('click', () => {
+                openStatsModal();
+            });
+
+            document.getElementById('btn-theme').addEventListener('click', () => {
+                document.getElementById('modal-theme').classList.remove('hidden');
+            });
+
+            document.querySelectorAll('.stats-tab').forEach(b => {
+                b.addEventListener('click', (e) => {
+                    renderStatsTab(e.target.dataset.tab);
+                });
+            });
+
+            document.getElementById('btn-reset-stats').addEventListener('click', (e) => {
+                const tab = e.target.dataset.tab;
+                if (confirm(`Zerar as estatísticas do nível ${tab.toUpperCase()}?`)) {
+                    statsManager.resetDifficulty(tab);
+                    renderStatsTab(tab);
+                }
+            });
+
+            document.querySelectorAll('.theme-felt-btn').forEach(b => {
+                b.addEventListener('click', (e) => {
+                    const currentBack = localStorage.getItem('paciencia_card_back') || 'blue';
+                    applyTheme(e.currentTarget.dataset.themeVal, currentBack);
+                });
+            });
+
+            document.querySelectorAll('.card-back-btn').forEach(b => {
+                b.addEventListener('click', (e) => {
+                    const currentFelt = localStorage.getItem('paciencia_felt_theme') || 'felt-green';
+                    applyTheme(currentFelt, e.currentTarget.dataset.backVal);
+                });
+            });
+
+            document.querySelectorAll('.modal-close').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.target.closest('.fixed').classList.add('hidden');
+                });
+            });
+        }
+
+        window.onload = function () {
+            initThemes();
+            initPointerControls();
+            setupKeyboardShortcuts();
+            setupUIEventListeners();
+            initNewGame('medio');
+        };
+    </script>
+</body>
+</html>

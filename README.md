@@ -36,7 +36,19 @@ Construído em HTML5, JavaScript puro (Vanilla JS), Tailwind CSS e Web Audio API
 
 ---
 
-## 🎮 Como Jogar
+## 🌐 Jogar Online (GitHub Pages)
 
-1. Basta abrir o arquivo `paciencia.html` em qualquer navegador web moderno (Chrome, Edge, Firefox, Safari).
-2. Não requer instalação ou compilação.
+Você pode jogar diretamente pelo navegador sem instalar nada:
+👉 **[https://sauloacsilva.github.io/pacienciaracional/](https://sauloacsilva.github.io/pacienciaracional/)**
+
+---
+
+## 🎮 Como Executar Localmente
+
+1. Clone este repositório ou baixe os arquivos:
+   ```bash
+   git clone https://github.com/sauloacsilva/pacienciaracional.git
+   ```
+2. Abra o arquivo `index.html` (ou `paciencia.html`) em qualquer navegador moderno (Chrome, Edge, Firefox, Safari).
+3. Não requer instalação de pacotes, compilação ou servidor backend.
+
