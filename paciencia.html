@@ -1433,10 +1433,29 @@
             if (!card) return false;
             const fPile = gameState.foundations[foundationIdx];
             if (fPile.length === 0) {
+                // Block if this card's family is already started in another pile
+                for (let i = 0; i < gameState.foundations.length; i++) {
+                    if (i === foundationIdx) continue;
+                    const otherPile = gameState.foundations[i];
+                    if (otherPile.length > 0 && Math.abs(otherPile[0].val - card.val) < 0.0001) {
+                        return false; // family already lives in pile i
+                    }
+                }
                 return true;
             }
             const existingVal = fPile[0].val;
             return Math.abs(card.val - existingVal) < 0.0001;
+        }
+
+        /** Returns the foundation index that already holds the given card's family, or -1 */
+        function findExistingFamilyFoundation(card) {
+            for (let i = 0; i < gameState.foundations.length; i++) {
+                const pile = gameState.foundations[i];
+                if (pile.length > 0 && Math.abs(pile[0].val - card.val) < 0.0001) {
+                    return i;
+                }
+            }
+            return -1;
         }
 
         function isValidTableauMove(movingStack, targetColIdx) {
@@ -1882,7 +1901,15 @@
                     executeMove(sourceInfo, targetInfo);
                 } else {
                     soundEngine.playError();
-                    explainInvalidMove(movingCards[0].card);
+                    const card = movingCards[0].card;
+                    const existingPile = findExistingFamilyFoundation(card);
+                    if (existingPile !== -1 && gameState.foundations[existingPile].length > 0
+                            && Math.abs(gameState.foundations[existingPile][0].val - card.val) < 0.0001
+                            && existingPile !== targetInfo.foundationIdx) {
+                        showToast(`🚫 **Família duplicada!** A família **${card.mainText} (${card.decStr})** já está no Monte ${existingPile + 1}. Coloque lá!`);
+                    } else {
+                        explainInvalidMove(card);
+                    }
                 }
             }
         }
