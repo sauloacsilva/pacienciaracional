@@ -83,16 +83,16 @@
             height: var(--card-height);
             border-radius: 0.65rem;
             position: relative;
-            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-            box-shadow: 0 4px 10px -1px rgba(0, 0, 0, 0.35), 0 2px 4px -1px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.9);
-            transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.15s ease, border-color 0.15s ease;
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px -1px rgba(0, 0, 0, 0.35), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
             cursor: pointer;
             touch-action: none;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 0.3rem 0.32rem;
-            border: 1.5px solid #cbd5e1;
+            padding: 0.35rem 0.35rem;
+            border: 2px solid #cbd5e1;
             font-variant-numeric: tabular-nums;
             overflow: hidden;
         }
@@ -102,76 +102,53 @@
             box-shadow: 0 6px 14px -2px rgba(0, 0, 0, 0.45), 0 2px 6px -1px rgba(0, 0, 0, 0.25);
         }
 
-        /* Card Back Themes & Rich Textures */
+        /* Card Back Themes - Textura Uniforme de Baralho Clássico (Sem medalhões circulares) */
         .game-card.card-back {
             border: 3px solid #ffffff;
-            box-shadow: 0 4px 10px -1px rgba(0, 0, 0, 0.45), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 8px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.25);
+            transition: transform 0.2s ease;
             position: relative;
             overflow: hidden;
-            background-repeat: repeat;
         }
 
-        /* Card Back Inner Filigree Border */
+        /* Filete Retangular Interno Fino */
         .game-card.card-back::after {
             content: '';
             position: absolute;
-            inset: 2px;
+            inset: 3px;
             border: 1px solid rgba(255, 255, 255, 0.45);
-            border-radius: 0.3rem;
+            border-radius: 0.35rem;
             pointer-events: none;
-            box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.25);
         }
 
-        /* Card Back Center Medallion / Seal */
-        .game-card.card-back::before {
-            content: '';
-            position: absolute;
-            width: clamp(22px, 35%, 34px);
-            height: clamp(22px, 35%, 34px);
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            border-radius: 50%;
-            border: 1.5px solid rgba(255, 255, 255, 0.65);
-            background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.05) 60%, transparent 100%);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 0 6px rgba(0,0,0,0.3);
-            pointer-events: none;
-            z-index: 1;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07'/%3E%3Ccircle cx='12' cy='12' r='3.5'/%3E%3C/svg%3E");
-            background-size: 65% 65%;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
-
-        /* Azul Safira: Guilloché / Diamond Crosshatch */
+        /* Azul Safira: Padrão contínuo de micro-losangos (Estilo Copag/Bicycle) */
         body[data-card-back="blue"] .game-card.card-back,
         .preview-back-blue {
             background-color: #1e3a8a;
             background-image: 
-                radial-gradient(ellipse at center, rgba(59, 130, 246, 0.6) 0%, rgba(30, 58, 138, 0.9) 70%, #0f172a 100%),
-                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cg fill='none' stroke='rgba(255,255,255,0.22)' stroke-width='0.75'%3E%3Cpath d='M8 0 L16 8 L8 16 L0 8 Z'/%3E%3Cpath d='M0 0 L16 16 M16 0 L0 16'/%3E%3Ccircle cx='8' cy='8' r='1.5' fill='rgba(255,255,255,0.3)'/%3E%3C/g%3E%3C/svg%3E");
-            background-size: auto, 14px 14px;
+                radial-gradient(ellipse at center, rgba(37, 99, 235, 0.5) 0%, rgba(30, 58, 138, 0.9) 75%, #0f172a 100%),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 0 L12 6 L6 12 L0 6 Z' fill='none' stroke='rgba(255,255,255,0.2)' stroke-width='0.75'/%3E%3C/svg%3E");
+            background-size: auto, 12px 12px;
         }
 
-        /* Dourado Real: Art Déco Geometric Weave */
+        /* Dourado Real: Padrão contínuo geométrico entrelaçado */
         body[data-card-back="gold"] .game-card.card-back,
         .preview-back-gold {
             background-color: #78350f;
             background-image: 
-                radial-gradient(ellipse at center, rgba(217, 119, 6, 0.65) 0%, rgba(120, 53, 15, 0.9) 70%, #451a03 100%),
-                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18'%3E%3Cg fill='none' stroke='rgba(253,224,71,0.25)' stroke-width='0.8'%3E%3Ccircle cx='9' cy='9' r='7'/%3E%3Ccircle cx='0' cy='9' r='7'/%3E%3Ccircle cx='18' cy='9' r='7'/%3E%3Ccircle cx='9' cy='0' r='7'/%3E%3Ccircle cx='9' cy='18' r='7'/%3E%3Ccircle cx='9' cy='9' r='2' fill='rgba(253,224,71,0.3)'/%3E%3C/g%3E%3C/svg%3E");
-            background-size: auto, 16px 16px;
+                radial-gradient(ellipse at center, rgba(217, 119, 6, 0.55) 0%, rgba(120, 53, 15, 0.9) 75%, #451a03 100%),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cg fill='none' stroke='rgba(253,224,71,0.22)' stroke-width='0.75'%3E%3Cpath d='M7 0 L14 7 L7 14 L0 7 Z'/%3E%3Cpath d='M0 0 L14 14 M14 0 L0 14'/%3E%3C/g%3E%3C/svg%3E");
+            background-size: auto, 14px 14px;
         }
 
-        /* Rubi Imperial: Damask / Velvet Trellis */
+        /* Rubi Imperial: Padrão contínuo tapeçaria escarlate */
         body[data-card-back="ruby"] .game-card.card-back,
         .preview-back-ruby {
             background-color: #881337;
             background-image: 
-                radial-gradient(ellipse at center, rgba(225, 29, 72, 0.65) 0%, rgba(136, 19, 55, 0.9) 70%, #4c0519 100%),
-                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cg fill='none' stroke='rgba(255,228,230,0.22)' stroke-width='0.75'%3E%3Cpath d='M8 0 C8 3.5 11.5 8 16 8 C11.5 8 8 12.5 8 16 C8 12.5 4.5 8 0 8 C4.5 8 8 3.5 8 0 Z'/%3E%3Ccircle cx='8' cy='8' r='1.5' fill='rgba(255,228,230,0.3)'/%3E%3C/g%3E%3C/svg%3E");
-            background-size: auto, 14px 14px;
+                radial-gradient(ellipse at center, rgba(225, 29, 72, 0.55) 0%, rgba(136, 19, 55, 0.9) 75%, #4c0519 100%),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 0 L12 6 L6 12 L0 6 Z' fill='none' stroke='rgba(255,228,230,0.2)' stroke-width='0.75'/%3E%3C/svg%3E");
+            background-size: auto, 12px 12px;
         }
 
         .game-card.selected {
@@ -944,40 +921,21 @@
                     const y2 = cy + r * Math.sin(endAngle);
                     const largeArc = (endAngle - startAngle) > Math.PI ? 1 : 0;
                     const filled = i < num;
-                    const fill = filled ? 'url(#pieGradient)' : '#f1f5f9';
-                    const stroke = '#ffffff';
+                    const fill = filled ? '#4f46e5' : '#f8fafc';
+                    const stroke = '#334155';
                     const d = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
-                    paths += `<path d="${d}" fill="${fill}" stroke="${stroke}" stroke-width="1.2" stroke-linejoin="round"/>`;
+                    paths += `<path d="${d}" fill="${fill}" stroke="${stroke}" stroke-width="1.2"/>`;
                 }
-                return `
-                <svg viewBox="0 0 50 50" class="w-full h-full drop-shadow-sm">
-                    <defs>
-                        <linearGradient id="pieGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#6366f1"/>
-                            <stop offset="100%" stop-color="#4338ca"/>
-                        </linearGradient>
-                    </defs>
-                    <circle cx="25" cy="25" r="21" fill="none" stroke="#e2e8f0" stroke-width="1"/>
-                    ${paths}
-                    <circle cx="25" cy="25" r="2.5" fill="#312e81"/>
-                </svg>`;
+                return `<svg viewBox="0 0 50 50" class="w-full h-full drop-shadow-sm">${paths}</svg>`;
             } else {
                 return `
-                <div class="flex items-center justify-center gap-0.5 w-full h-full">
+                <div class="flex items-center justify-center gap-1 w-full h-full">
                     <svg viewBox="0 0 50 50" class="w-1/2 h-full drop-shadow-sm">
-                        <defs>
-                            <linearGradient id="pieGradFull" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#6366f1"/>
-                                <stop offset="100%" stop-color="#4338ca"/>
-                            </linearGradient>
-                        </defs>
-                        <circle cx="25" cy="25" r="20" fill="url(#pieGradFull)" stroke="#ffffff" stroke-width="1.2"/>
-                        <circle cx="25" cy="25" r="2.5" fill="#312e81"/>
+                        <circle cx="25" cy="25" r="20" fill="#4f46e5" stroke="#334155" stroke-width="1.5"/>
                     </svg>
                     <svg viewBox="0 0 50 50" class="w-1/2 h-full drop-shadow-sm">
-                        <circle cx="25" cy="25" r="20" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.2"/>
-                        <path d="M 25 25 L 25 5 A 20 20 0 0 1 ${num === 5 ? '45 25' : '25 45'} Z" fill="#6366f1" stroke="#ffffff" stroke-width="1.2"/>
-                        <circle cx="25" cy="25" r="2.5" fill="#312e81"/>
+                        <circle cx="25" cy="25" r="20" fill="#f8fafc" stroke="#334155" stroke-width="1.5"/>
+                        <path d="M 25 25 L 25 5 A 20 20 0 0 1 ${num === 5 ? '45 25' : '25 45'} Z" fill="#4f46e5" stroke="#334155" stroke-width="1.2"/>
                     </svg>
                 </div>`;
             }
@@ -997,16 +955,14 @@
                     val: fam.val,
                     type: 'frac',
                     typeLabel: fam.isMixed ? 'Misto' : 'Fração',
-                    badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-300',
+                    badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
                     num: fam.num,
                     den: fam.den,
                     decStr: fam.decStr,
                     pctStr: fam.pctStr,
                     isMixed: fam.isMixed,
                     mixedStr: fam.mixedStr,
-                    mainText: fam.isMixed ? fam.mixedStr : `${fam.num}/${fam.den}`,
-                    cornerIndex: fam.isMixed ? fam.mixedStr : `${fam.num}/${fam.den}`,
-                    icon: '➗'
+                    mainText: fam.isMixed ? fam.mixedStr : `${fam.num}/${fam.den}`
                 });
 
                 // 2. Equivalent Fraction
@@ -1015,17 +971,14 @@
                     familyId: fam.id,
                     val: fam.val,
                     type: 'eq_frac',
-                    typeLabel: 'Equiv.',
-                    badgeColor: 'bg-amber-50 text-amber-800 border-amber-300',
+                    typeLabel: 'Equivalente',
+                    badgeColor: 'bg-amber-100 text-amber-800 border-amber-300',
                     num: fam.eqNum,
                     den: fam.eqDen,
-                    baseFrac: `${fam.num}/${fam.den}`,
                     decStr: fam.decStr,
                     pctStr: fam.pctStr,
                     isMixed: fam.isMixed,
-                    mainText: `${fam.eqNum}/${fam.eqDen}`,
-                    cornerIndex: `${fam.eqNum}/${fam.eqDen}`,
-                    icon: '⇋'
+                    mainText: `${fam.eqNum}/${fam.eqDen}`
                 });
 
                 // 3. Decimal & Percentage
@@ -1034,15 +987,13 @@
                     familyId: fam.id,
                     val: fam.val,
                     type: 'dec_pct',
-                    typeLabel: 'Decimal',
-                    badgeColor: 'bg-sky-50 text-sky-800 border-sky-300',
+                    typeLabel: 'Decimal / %',
+                    badgeColor: 'bg-sky-100 text-sky-800 border-sky-300',
                     num: fam.num,
                     den: fam.den,
                     decStr: fam.decStr,
                     pctStr: fam.pctStr,
-                    mainText: `${fam.decStr}`,
-                    cornerIndex: `${fam.decStr}`,
-                    icon: '%'
+                    mainText: `${fam.decStr}`
                 });
 
                 // 4. Figural (SVG Chart)
@@ -1052,15 +1003,13 @@
                     val: fam.val,
                     type: 'figural',
                     typeLabel: 'Figura',
-                    badgeColor: 'bg-indigo-50 text-indigo-800 border-indigo-300',
+                    badgeColor: 'bg-indigo-100 text-indigo-800 border-indigo-300',
                     num: fam.num,
                     den: fam.den,
                     decStr: fam.decStr,
                     pctStr: fam.pctStr,
                     isMixed: fam.isMixed,
-                    mainText: `${fam.num}/${fam.den}`,
-                    cornerIndex: `${fam.num}/${fam.den}`,
-                    icon: '◓'
+                    mainText: `${fam.num}/${fam.den}`
                 });
             });
 
@@ -1312,14 +1261,9 @@
             cardEl.className = 'game-card select-none';
             const diffConfig = DIFFICULTY_CONFIGS[gameState.difficulty];
 
-            // Top Header: Compact Suit/Type badge (left) + Corner Value Index (right for tableau stacking)
             const topHeader = `
-                <div class="flex items-center justify-between w-full leading-none pointer-events-none mb-0.5">
-                    <span class="inline-flex items-center gap-0.5 text-[8.5px] font-extrabold px-1 py-0.5 rounded border shadow-2xs ${card.badgeColor}">
-                        <span>${card.icon || ''}</span>
-                        <span>${card.typeLabel}</span>
-                    </span>
-                    <span class="text-[9px] font-black text-slate-600 tracking-tight">${card.cornerIndex || ''}</span>
+                <div class="flex justify-between items-start w-full leading-none pointer-events-none">
+                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded border ${card.badgeColor}">${card.typeLabel}</span>
                 </div>
             `;
 
@@ -1328,60 +1272,59 @@
             if (card.type === 'frac') {
                 innerHTML = `
                     ${topHeader}
-                    <div class="my-auto flex justify-center items-center pointer-events-none py-0.5">
+                    <div class="my-auto flex justify-center items-center pointer-events-none py-1">
                         ${card.isMixed ? `
-                            <div class="flex items-center gap-1">
-                                <span class="text-base sm:text-xl font-black text-emerald-950">1</span>
-                                <div class="fraction-display text-sm sm:text-base text-emerald-900 font-bold">
+                            <div class="flex items-center gap-1 text-slate-900">
+                                <span class="text-xl sm:text-2xl font-black">1</span>
+                                <div class="fraction-display text-base sm:text-lg font-black">
                                     <span class="fraction-numerator">${card.num - card.den}</span>
                                     <span class="fraction-denominator">${card.den}</span>
                                 </div>
                             </div>
                         ` : `
-                            <div class="fraction-display text-lg sm:text-xl font-black text-emerald-950">
+                            <div class="fraction-display text-xl sm:text-2xl font-black text-slate-900">
                                 <span class="fraction-numerator">${card.num}</span>
                                 <span class="fraction-denominator">${card.den}</span>
                             </div>
                         `}
                     </div>
-                    <div class="text-[8px] sm:text-[8.5px] font-bold text-center pointer-events-none truncate ${diffConfig.badgeDecimalHelper ? 'text-amber-700 bg-amber-50/90 rounded py-0.5 border border-amber-200' : 'text-emerald-700/80 uppercase tracking-wider'}">
-                        ${diffConfig.badgeDecimalHelper ? `≈ ${card.decStr}` : 'Canônica'}
+                    <div class="text-[9px] text-center pointer-events-none truncate font-semibold ${diffConfig.badgeDecimalHelper ? 'text-slate-500 font-bold' : 'text-emerald-800/80'}">
+                        ${diffConfig.badgeDecimalHelper ? `= ${card.decStr}` : 'Fração'}
                     </div>
                 `;
             } else if (card.type === 'eq_frac') {
                 innerHTML = `
                     ${topHeader}
-                    <div class="my-auto flex flex-col items-center justify-center pointer-events-none py-0.5">
-                        <div class="fraction-display text-lg sm:text-xl font-black text-amber-950">
+                    <div class="my-auto flex justify-center items-center pointer-events-none py-1">
+                        <div class="fraction-display text-xl sm:text-2xl font-black text-amber-950">
                             <span class="fraction-numerator">${card.num}</span>
                             <span class="fraction-denominator">${card.den}</span>
                         </div>
-                        ${card.baseFrac ? `<span class="text-[7.5px] font-bold text-amber-800/80 bg-amber-100/70 px-1 py-0.2 rounded mt-0.5">Base: ${card.baseFrac}</span>` : ''}
                     </div>
-                    <div class="text-[8px] sm:text-[8.5px] font-bold text-center pointer-events-none truncate ${diffConfig.badgeDecimalHelper ? 'text-amber-700 bg-amber-50/90 rounded py-0.5 border border-amber-200' : 'text-amber-800/80 uppercase tracking-wider'}">
-                        ${diffConfig.badgeDecimalHelper ? `≈ ${card.decStr}` : 'Equivalência'}
+                    <div class="text-[9px] text-center pointer-events-none truncate font-semibold ${diffConfig.badgeDecimalHelper ? 'text-slate-500 font-bold' : 'text-amber-800/80'}">
+                        ${diffConfig.badgeDecimalHelper ? `= ${card.decStr}` : 'Equivalente'}
                     </div>
                 `;
             } else if (card.type === 'dec_pct') {
                 innerHTML = `
                     ${topHeader}
-                    <div class="my-auto flex flex-col items-center justify-center leading-tight pointer-events-none py-0.5">
-                        <span class="text-base sm:text-xl font-black text-sky-950 tracking-tight">${card.decStr}</span>
-                        <span class="text-[9px] sm:text-[10px] font-extrabold text-sky-700 bg-sky-100/90 px-1.5 py-0.5 rounded-full mt-0.5">${card.pctStr}</span>
+                    <div class="my-auto flex flex-col items-center justify-center leading-tight pointer-events-none py-1">
+                        <span class="text-xl sm:text-2xl font-black text-sky-950">${card.decStr}</span>
+                        <span class="text-xs sm:text-sm font-bold text-sky-600 mt-0.5">${card.pctStr}</span>
                     </div>
-                    <div class="text-[8px] sm:text-[8.5px] font-bold text-center pointer-events-none truncate ${diffConfig.badgeDecimalHelper ? 'text-amber-700 bg-amber-50/90 rounded py-0.5 border border-amber-200' : 'text-sky-800/80 uppercase tracking-wider'}">
-                        ${diffConfig.badgeDecimalHelper ? `≈ ${card.decStr}` : 'Decimal & %'}
+                    <div class="text-[9px] text-center pointer-events-none truncate font-semibold ${diffConfig.badgeDecimalHelper ? 'text-slate-500 font-bold' : 'text-sky-800/80'}">
+                        ${diffConfig.badgeDecimalHelper ? `= ${card.decStr}` : 'Decimal'}
                     </div>
                 `;
             } else if (card.type === 'figural') {
                 const pieSvg = generatePieSVG(card.num, card.den, card.isMixed);
                 innerHTML = `
                     ${topHeader}
-                    <div class="my-auto w-8 h-8 sm:w-10 sm:h-10 mx-auto flex items-center justify-center pointer-events-none py-0.5">
+                    <div class="my-auto w-9 h-9 sm:w-11 sm:h-11 mx-auto flex items-center justify-center pointer-events-none py-0.5">
                         ${pieSvg}
                     </div>
-                    <div class="text-[8px] sm:text-[8.5px] font-bold text-center pointer-events-none truncate ${diffConfig.badgeDecimalHelper ? 'text-amber-700 bg-amber-50/90 rounded py-0.5 border border-amber-200' : 'text-indigo-800/80 uppercase tracking-wider'}">
-                        ${diffConfig.badgeDecimalHelper ? `≈ ${card.decStr}` : `${card.num}/${card.den} partes`}
+                    <div class="text-[9px] text-center pointer-events-none truncate font-semibold ${diffConfig.badgeDecimalHelper ? 'text-slate-500 font-bold' : 'text-indigo-800/80'}">
+                        ${diffConfig.badgeDecimalHelper ? `= ${card.decStr}` : 'Figura'}
                     </div>
                 `;
             }
