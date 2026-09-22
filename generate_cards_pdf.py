@@ -1,0 +1,1360 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Gerador Completo do Baralho Pedagógico em PDF e HTML
+Paciência Racional - Paciência das Equivalências
+"""
+
+import os
+import math
+import subprocess
+
+FAMILIES = [
+    {
+        "id": 1,
+        "val": 0.2,
+        "label": "1/5",
+        "eqLabel": "2/10",
+        "decStr": "0,2",
+        "pctStr": "20%",
+        "num": 1,
+        "den": 5,
+        "eqNum": 2,
+        "eqDen": 10,
+        "minLevel": "Fácil",
+        "isMixed": False,
+        "cornerFrac": "1/5",
+        "cornerEquiv": "2/10"
+    },
+    {
+        "id": 2,
+        "val": 0.25,
+        "label": "1/4",
+        "eqLabel": "2/8",
+        "decStr": "0,25",
+        "pctStr": "25%",
+        "num": 1,
+        "den": 4,
+        "eqNum": 2,
+        "eqDen": 8,
+        "minLevel": "Fácil",
+        "isMixed": False,
+        "cornerFrac": "1/4",
+        "cornerEquiv": "2/8"
+    },
+    {
+        "id": 3,
+        "val": 1/3,
+        "label": "1/3",
+        "eqLabel": "2/6",
+        "decStr": "0,33",
+        "pctStr": "33,3%",
+        "num": 1,
+        "den": 3,
+        "eqNum": 2,
+        "eqDen": 6,
+        "minLevel": "Médio",
+        "isMixed": False,
+        "cornerFrac": "1/3",
+        "cornerEquiv": "2/6"
+    },
+    {
+        "id": 4,
+        "val": 0.4,
+        "label": "2/5",
+        "eqLabel": "4/10",
+        "decStr": "0,4",
+        "pctStr": "40%",
+        "num": 2,
+        "den": 5,
+        "eqNum": 4,
+        "eqDen": 10,
+        "minLevel": "Fácil",
+        "isMixed": False,
+        "cornerFrac": "2/5",
+        "cornerEquiv": "4/10"
+    },
+    {
+        "id": 5,
+        "val": 0.5,
+        "label": "1/2",
+        "eqLabel": "2/4",
+        "decStr": "0,5",
+        "pctStr": "50%",
+        "num": 1,
+        "den": 2,
+        "eqNum": 2,
+        "eqDen": 4,
+        "minLevel": "Fácil",
+        "isMixed": False,
+        "cornerFrac": "1/2",
+        "cornerEquiv": "2/4"
+    },
+    {
+        "id": 6,
+        "val": 0.6,
+        "label": "3/5",
+        "eqLabel": "6/10",
+        "decStr": "0,6",
+        "pctStr": "60%",
+        "num": 3,
+        "den": 5,
+        "eqNum": 6,
+        "eqDen": 10,
+        "minLevel": "Fácil",
+        "isMixed": False,
+        "cornerFrac": "3/5",
+        "cornerEquiv": "6/10"
+    },
+    {
+        "id": 7,
+        "val": 2/3,
+        "label": "2/3",
+        "eqLabel": "4/6",
+        "decStr": "0,67",
+        "pctStr": "66,7%",
+        "num": 2,
+        "den": 3,
+        "eqNum": 4,
+        "eqDen": 6,
+        "minLevel": "Médio",
+        "isMixed": False,
+        "cornerFrac": "2/3",
+        "cornerEquiv": "4/6"
+    },
+    {
+        "id": 8,
+        "val": 0.75,
+        "label": "3/4",
+        "eqLabel": "6/8",
+        "decStr": "0,75",
+        "pctStr": "75%",
+        "num": 3,
+        "den": 4,
+        "eqNum": 6,
+        "eqDen": 8,
+        "minLevel": "Fácil",
+        "isMixed": False,
+        "cornerFrac": "3/4",
+        "cornerEquiv": "6/8"
+    },
+    {
+        "id": 9,
+        "val": 1.25,
+        "label": "5/4",
+        "eqLabel": "10/8",
+        "decStr": "1,25",
+        "pctStr": "125%",
+        "num": 5,
+        "den": 4,
+        "eqNum": 10,
+        "eqDen": 8,
+        "minLevel": "Insano",
+        "isMixed": True,
+        "mixedStr": "1 1/4",
+        "cornerFrac": "1 ¼",
+        "cornerEquiv": "10/8"
+    },
+    {
+        "id": 10,
+        "val": 1.5,
+        "label": "3/2",
+        "eqLabel": "6/4",
+        "decStr": "1,5",
+        "pctStr": "150%",
+        "num": 3,
+        "den": 2,
+        "eqNum": 6,
+        "eqDen": 4,
+        "minLevel": "Insano",
+        "isMixed": True,
+        "mixedStr": "1 1/2",
+        "cornerFrac": "1 ½",
+        "cornerEquiv": "6/4"
+    }
+]
+
+def generate_pie_svg(num, den, is_mixed=False, size=120):
+    """Gera gráfico de pizza vetorial SVG preciso e proporcional."""
+    if not is_mixed:
+        cx, cy, r = 50, 50, 42
+        paths = []
+        for i in range(den):
+            start_angle = (i * 2 * math.pi) / den - math.pi / 2
+            end_angle = ((i + 1) * 2 * math.pi) / den - math.pi / 2
+            x1 = cx + r * math.cos(start_angle)
+            y1 = cy + r * math.sin(start_angle)
+            x2 = cx + r * math.cos(end_angle)
+            y2 = cy + r * math.sin(end_angle)
+            large_arc = 1 if (end_angle - start_angle) > math.pi else 0
+            filled = i < num
+            fill = '#4f46e5' if filled else '#f8fafc'
+            stroke = '#1e293b'
+            d = f"M {cx:.2f} {cy:.2f} L {x1:.2f} {y1:.2f} A {r} {r} 0 {large_arc} 1 {x2:.2f} {y2:.2f} Z"
+            paths.append(f'<path d="{d}" fill="{fill}" stroke="{stroke}" stroke-width="2.2" />')
+        return f'<svg viewBox="0 0 100 100" class="pie-svg" style="width:{size}px; height:{size}px;">{"".join(paths)}</svg>'
+    else:
+        # Mixed numbers: 2 pies side-by-side with clear divisions
+        sub_den = 4 if num == 5 else 2
+        
+        # Pie 1: Whole unit divided into sectors, all filled
+        cx, cy, r = 50, 50, 42
+        paths1 = []
+        for i in range(sub_den):
+            start_angle = (i * 2 * math.pi) / sub_den - math.pi / 2
+            end_angle = ((i + 1) * 2 * math.pi) / sub_den - math.pi / 2
+            x1 = cx + r * math.cos(start_angle)
+            y1 = cy + r * math.sin(start_angle)
+            x2 = cx + r * math.cos(end_angle)
+            y2 = cy + r * math.sin(end_angle)
+            large_arc = 1 if (end_angle - start_angle) > math.pi else 0
+            d = f"M {cx:.2f} {cy:.2f} L {x1:.2f} {y1:.2f} A {r} {r} 0 {large_arc} 1 {x2:.2f} {y2:.2f} Z"
+            paths1.append(f'<path d="{d}" fill="#4f46e5" stroke="#1e293b" stroke-width="2.2" />')
+        p1 = f'<svg viewBox="0 0 100 100" style="width:{size*0.54:.0f}px; height:{size*0.54:.0f}px;">{"".join(paths1)}</svg>'
+        
+        # Pie 2: 1 sector filled, rest unfilled
+        paths2 = []
+        for i in range(sub_den):
+            start_angle = (i * 2 * math.pi) / sub_den - math.pi / 2
+            end_angle = ((i + 1) * 2 * math.pi) / sub_den - math.pi / 2
+            x1 = cx + r * math.cos(start_angle)
+            y1 = cy + r * math.sin(start_angle)
+            x2 = cx + r * math.cos(end_angle)
+            y2 = cy + r * math.sin(end_angle)
+            large_arc = 1 if (end_angle - start_angle) > math.pi else 0
+            filled = i == 0
+            fill = '#4f46e5' if filled else '#f8fafc'
+            d = f"M {cx:.2f} {cy:.2f} L {x1:.2f} {y1:.2f} A {r} {r} 0 {large_arc} 1 {x2:.2f} {y2:.2f} Z"
+            paths2.append(f'<path d="{d}" fill="{fill}" stroke="#1e293b" stroke-width="2.2" />')
+        p2 = f'<svg viewBox="0 0 100 100" style="width:{size*0.54:.0f}px; height:{size*0.54:.0f}px;">{"".join(paths2)}</svg>'
+        
+        return f'<div class="mixed-pies-wrap">{p1}{p2}</div>'
+
+def generate_mini_pie_svg(num, den, is_mixed=False):
+    """Mini ícone para o índice de canto da carta de figura."""
+    if not is_mixed:
+        filled_angle = (num / den) * 360
+        large_arc = 1 if filled_angle > 180 else 0
+        end_rad = (num * 2 * math.pi / den) - math.pi / 2
+        x2 = 12 + 10 * math.cos(end_rad)
+        y2 = 12 + 10 * math.sin(end_rad)
+        d = f"M 12 12 L 12 2 A 10 10 0 {large_arc} 1 {x2:.2f} {y2:.2f} Z"
+        return f'''<svg viewBox="0 0 24 24" class="mini-pie-icon">
+            <circle cx="12" cy="12" r="10" fill="#f8fafc" stroke="#334155" stroke-width="2" />
+            <path d="{d}" fill="#4f46e5" stroke="#334155" stroke-width="1.5" />
+        </svg>'''
+    else:
+        return '''<svg viewBox="0 0 28 20" class="mini-pie-icon">
+            <circle cx="9" cy="10" r="7" fill="#4f46e5" stroke="#334155" stroke-width="1.8" />
+            <circle cx="21" cy="10" r="7" fill="#f8fafc" stroke="#334155" stroke-width="1.8" />
+            <path d="M 21 10 L 21 3 A 7 7 0 0 1 28 10 Z" fill="#4f46e5" stroke="#334155" stroke-width="1.4" />
+        </svg>'''
+
+def render_card_front(fam, card_type):
+    fam_id = fam["id"]
+    
+    if card_type == "frac":
+        badge_cls = "badge-frac"
+        type_label = "Fração Mista" if fam["isMixed"] else "Fração"
+        corner_top = fam["cornerFrac"]
+        corner_icon = "F"
+        
+        if fam["isMixed"]:
+            frac_diff = fam["num"] - fam["den"]
+            center_html = f'''
+            <div class="card-main-content">
+                <div class="mixed-frac-box">
+                    <span class="mixed-whole">1</span>
+                    <div class="fraction-box">
+                        <div class="frac-num">{frac_diff}</div>
+                        <div class="frac-den">{fam["den"]}</div>
+                    </div>
+                </div>
+                <div class="sub-equiv">Fração Imprópria: {fam["num"]}/{fam["den"]}</div>
+            </div>'''
+        else:
+            center_html = f'''
+            <div class="card-main-content">
+                <div class="fraction-box large-frac frac-color">
+                    <div class="frac-num">{fam["num"]}</div>
+                    <div class="frac-den">{fam["den"]}</div>
+                </div>
+                <div class="sub-equiv">Fração Irredutível</div>
+            </div>'''
+            
+        footer_sub = f"= {fam['decStr']} • {fam['pctStr']}"
+
+    elif card_type == "eq_frac":
+        badge_cls = "badge-equiv"
+        type_label = "Equivalente"
+        corner_top = fam["cornerEquiv"]
+        corner_icon = "E"
+        center_html = f'''
+        <div class="card-main-content">
+            <div class="fraction-box large-frac equiv-color">
+                <div class="frac-num">{fam["eqNum"]}</div>
+                <div class="frac-den">{fam["eqDen"]}</div>
+            </div>
+            <div class="sub-equiv">Equivale a {fam["label"]}</div>
+        </div>'''
+        footer_sub = f"= {fam['decStr']} • {fam['pctStr']}"
+
+    elif card_type == "dec_pct":
+        badge_cls = "badge-dec"
+        type_label = "Decimal / %"
+        corner_top = fam["decStr"]
+        corner_icon = "%"
+        center_html = f'''
+        <div class="card-main-content">
+            <div class="dec-value">{fam["decStr"]}</div>
+            <div class="pct-pill">{fam["pctStr"]}</div>
+            <div class="sub-equiv">Decimal & Porcentagem</div>
+        </div>'''
+        footer_sub = f"= {fam['label']} = {fam['eqLabel']}"
+
+    elif card_type == "figural":
+        badge_cls = "badge-fig"
+        type_label = "Figura"
+        corner_top = fam["label"]
+        corner_icon = generate_mini_pie_svg(fam["num"], fam["den"], fam["isMixed"])
+        pie_svg = generate_pie_svg(fam["num"], fam["den"], fam["isMixed"], size=122)
+        sub_desc = f"1 inteiro + 1/{4 if fam['num']==5 else 2}" if fam["isMixed"] else f"{fam['num']} de {fam['den']} fatias"
+        center_html = f'''
+        <div class="card-main-content">
+            <div class="pie-container">
+                {pie_svg}
+            </div>
+            <div class="sub-equiv">{sub_desc}</div>
+        </div>'''
+        footer_sub = f"= {fam['decStr']} • {fam['pctStr']}"
+
+    # Corner icon handling (text vs SVG)
+    if isinstance(corner_icon, str) and not corner_icon.startswith('<svg'):
+        corner_markup_tl = f'<span class="corner-type-icon">{corner_icon}</span>'
+        corner_markup_br = f'<span class="corner-type-icon">{corner_icon}</span>'
+    else:
+        corner_markup_tl = corner_icon
+        corner_markup_br = corner_icon
+
+    return f'''
+    <div class="card-container">
+        <div class="game-card card-front">
+            <div class="card-inner-frame"></div>
+            <div class="card-inner">
+                <!-- Header -->
+                <div class="card-header">
+                    <div class="corner-index top-left">
+                        <span class="corner-val">{corner_top}</span>
+                        {corner_markup_tl}
+                    </div>
+                    <div class="badge {badge_cls}">{type_label}</div>
+                    <div class="fam-tag">F{fam_id}</div>
+                </div>
+
+                <!-- Center -->
+                {center_html}
+
+                <!-- Footer -->
+                <div class="card-footer">
+                    <div class="footer-info">
+                        <span class="fam-badge">★ Família {fam_id}</span>
+                        <span class="footer-sub">{footer_sub}</span>
+                    </div>
+                    <div class="corner-index bottom-right">
+                        <span class="corner-val">{corner_top}</span>
+                        {corner_markup_br}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    '''
+
+def render_card_back(back_theme="blue"):
+    return f'''
+    <div class="card-container">
+        <div class="game-card card-back back-{back_theme}">
+            <div class="back-inner">
+                <div class="back-pattern"></div>
+                <div class="back-frame-border"></div>
+                <div class="back-center-crest">
+                    <div class="crest-icon">
+                        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fef08a" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="3" stroke="#fef08a"/>
+                            <path d="M 3 12 L 21 12" stroke="#fef08a"/>
+                            <circle cx="12" cy="7.5" r="2.5" fill="#fef08a"/>
+                            <circle cx="12" cy="16.5" r="2.5" fill="#fef08a"/>
+                        </svg>
+                    </div>
+                    <div class="crest-title">PACIÊNCIA<br>RACIONAL</div>
+                    <div class="crest-subtitle">Baralho das Equivalências</div>
+                    <div class="crest-divider"></div>
+                    <div class="crest-symbols">¼ • ½ • ¾ • 1</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    '''
+
+def generate_html():
+    front_pages = []
+    back_pages = []
+    
+    for i in range(0, len(FAMILIES), 2):
+        f1 = FAMILIES[i]
+        f2 = FAMILIES[i+1]
+        page_num = (i // 2) + 1
+        
+        cards_html = []
+        # Row 1: f1 (4 cards)
+        for ctype in ["frac", "eq_frac", "dec_pct", "figural"]:
+            cards_html.append(render_card_front(f1, ctype))
+        # Row 2: f2 (4 cards)
+        for ctype in ["frac", "eq_frac", "dec_pct", "figural"]:
+            cards_html.append(render_card_front(f2, ctype))
+            
+        front_pages.append(f'''
+        <div class="page page-front" id="front-page-{page_num}">
+            <div class="page-meta">
+                <span><strong>Paciência Racional</strong> • Baralho de Equivalências</span>
+                <span>Folha {page_num} de 5 — Família {f1["id"]} ({f1["label"]}) e Família {f2["id"]} ({f2["label"]})</span>
+                <span class="cut-hint">✂️ Recorte nas linhas pontilhadas cinzas</span>
+            </div>
+            <div class="cards-grid">
+                {"".join(cards_html)}
+            </div>
+        </div>
+        ''')
+        
+        # Matching back page for duplex printing
+        back_cards = [render_card_back("blue") for _ in range(8)]
+        back_pages.append(f'''
+        <div class="page page-back" id="back-page-{page_num}">
+            <div class="page-meta back-meta">
+                <span>Verso das Cartas — Folha {page_num} de 5 (Alinhamento Simétrico para Impressão Duplex)</span>
+                <span>Paciência Racional</span>
+            </div>
+            <div class="cards-grid">
+                {"".join(back_cards)}
+            </div>
+        </div>
+        ''')
+
+    # Page 1: Cover & Printing Guide & Families Overview
+    cover_page = '''
+    <div class="page page-cover">
+        <div class="cover-header">
+            <div class="cover-badge">🃏 MATERIAL DIDÁTICO & JOGO DE CARTAS MATEMÁTICO</div>
+            <h1 class="cover-title">Paciência Racional</h1>
+            <h2 class="cover-subtitle">Baralho Pedagógico de Equivalências de Números Racionais</h2>
+            <p class="cover-intro">
+                Conjunto completo com <strong>40 cartas</strong> coloridas em papel cartão Poker Standard, organizadas em <strong>10 famílias de equivalências</strong>.
+                Ideal para sala de aula, oficinas pedagógicas e jogo em família. Cada família conecta 4 linguagens matemáticas:
+                <strong>fração irredutível, fração equivalente, representação decimal / porcentagem e modelo geométrico visual (figura)</strong>.
+            </p>
+        </div>
+
+        <div class="cover-grid">
+            <div class="cover-card">
+                <h3>🖨️ Guia de Impressão e Preparação</h3>
+                <ul>
+                    <li><strong>Papel Ideal:</strong> Papel de gramatura alta <strong>180g/m² a 240g/m²</strong> (Offset, Sulfite 180g, Vergê ou Couché fosco). Se usar papel 75g normal, você pode colar em cartolina antes de cortar ou usar <em>sleeves</em> plásticos de jogo.</li>
+                    <li><strong>Tamanho Oficial:</strong> Padrão Poker <strong>63,5 mm × 88,9 mm</strong> (2,5" × 3,5"). Encaixa perfeitamente em protetores plásticos tipo <em>Mayday, Dragon Shield ou Ultra-Pro</em>.</li>
+                    <li><strong>Frente e Verso Automático (Duplex):</strong> Configure a impressora com <strong>"Virar na borda curta"</strong> (modo Paisagem/Landscape). A grade de versos possui margens matematicamente simétricas para casar exatamente com a frente.</li>
+                    <li><strong>Impressão Apenas Frente:</strong> Se preferir não gastar tinta no verso, imprima apenas as páginas ímpares de cartas (folhas 1 a 5 da frente).</li>
+                    <li><strong>Corte:</strong> Use tesoura escolar ou régua metálica com estilete sobre base de corte, seguindo as guias pontilhadas.</li>
+                </ul>
+            </div>
+
+            <div class="cover-card">
+                <h3>👥 Aplicações Pedagógicas (BNCC)</h3>
+                <ul>
+                    <li><strong>Habilidades Trabalhadas:</strong> EF06MA07, EF06MA08, EF06MA09 (Reconhecimento de frações equivalentes, conversão entre representações fracionária, decimal e percentual).</li>
+                    <li><strong>Visualização Espacial:</strong> Fixação do conceito de "todo-parte" através do disco fracionário proporcional.</li>
+                    <li><strong>Agilidade Mental:</strong> Superação de erros comuns, como confundir denominadores maiores com quantidades maiores.</li>
+                    <li><strong>Níveis Diferenciados:</strong>
+                        <br>• <em>Iniciante (6º ano):</em> Famílias 1, 2, 4, 5, 6 e 8 (denominadores 2, 4, 5).
+                        <br>• <em>Intermediário (7º ano):</em> Adiciona Famílias 3 e 7 (dízimas periódicas 1/3 e 2/3).
+                        <br>• <em>Avançado / Desafio:</em> Famílias 9 e 10 (frações impróprias e números mistos).
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="cover-table-section">
+            <h3>📊 Tabela Geral das 10 Famílias de Equivalências</h3>
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>Família</th>
+                        <th>Nível</th>
+                        <th>🟢 Fração Simplificada</th>
+                        <th>🟡 Fração Equivalente</th>
+                        <th>🔵 Decimal</th>
+                        <th>🔵 Porcentagem</th>
+                        <th>🟣 Modelo Geométrico</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>Família 1</strong></td><td><span class="lvl facil">Fácil</span></td><td><strong>1/5</strong></td><td>2/10</td><td><strong>0,2</strong></td><td>20%</td><td>1 de 5 partes de círculo</td></tr>
+                    <tr><td><strong>Família 2</strong></td><td><span class="lvl facil">Fácil</span></td><td><strong>1/4</strong></td><td>2/8</td><td><strong>0,25</strong></td><td>25%</td><td>1 de 4 partes (quadrante)</td></tr>
+                    <tr><td><strong>Família 3</strong></td><td><span class="lvl medio">Médio</span></td><td><strong>1/3</strong></td><td>2/6</td><td><strong>0,33...</strong></td><td>33,3%</td><td>1 de 3 partes (terço)</td></tr>
+                    <tr><td><strong>Família 4</strong></td><td><span class="lvl facil">Fácil</span></td><td><strong>2/5</strong></td><td>4/10</td><td><strong>0,4</strong></td><td>40%</td><td>2 de 5 partes de círculo</td></tr>
+                    <tr><td><strong>Família 5</strong></td><td><span class="lvl facil">Fácil</span></td><td><strong>1/2</strong></td><td>2/4</td><td><strong>0,5</strong></td><td>50%</td><td>1 de 2 partes (metade)</td></tr>
+                    <tr><td><strong>Família 6</strong></td><td><span class="lvl facil">Fácil</span></td><td><strong>3/5</strong></td><td>6/10</td><td><strong>0,6</strong></td><td>60%</td><td>3 de 5 partes de círculo</td></tr>
+                    <tr><td><strong>Família 7</strong></td><td><span class="lvl medio">Médio</span></td><td><strong>2/3</strong></td><td>4/6</td><td><strong>0,67...</strong></td><td>66,7%</td><td>2 de 3 partes de círculo</td></tr>
+                    <tr><td><strong>Família 8</strong></td><td><span class="lvl facil">Fácil</span></td><td><strong>3/4</strong></td><td>6/8</td><td><strong>0,75</strong></td><td>75%</td><td>3 de 4 partes de círculo</td></tr>
+                    <tr><td><strong>Família 9</strong></td><td><span class="lvl insano">Insano</span></td><td><strong>1 1/4</strong> (= 5/4)</td><td>10/8</td><td><strong>1,25</strong></td><td>125%</td><td>1 disco inteiro + 1/4</td></tr>
+                    <tr><td><strong>Família 10</strong></td><td><span class="lvl insano">Insano</span></td><td><strong>1 1/2</strong> (= 3/2)</td><td>6/4</td><td><strong>1,5</strong></td><td>150%</td><td>1 disco inteiro + 1/2</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="cover-footer">
+            <span>Paciência Racional • Projeto de Educação Matemática • Versão Oficial para Impressão</span>
+            <span>Documento para Impressão Duplex (Virar na borda curta) • 40 Cartas em 5 Folhas</span>
+        </div>
+    </div>
+    '''
+
+    # Page 2: Game Rules (for playing on physical table)
+    rules_page = '''
+    <div class="page page-cover">
+        <div class="cover-header">
+            <div class="cover-badge">🎲 REGRAS DOS JOGOS DE MESA</div>
+            <h1 class="cover-title">Como Jogar na Mesa com as Cartas Físicas</h1>
+            <h2 class="cover-subtitle">5 Dinâmicas Diferentes para Sala de Aula, Grupos ou Jogador Solo</h2>
+        </div>
+
+        <div class="rules-grid-4">
+            <div class="rule-box">
+                <div class="rule-num">1</div>
+                <h4>Paciência Racional Solo (Solitaire Clássico)</h4>
+                <p><strong>Jogadores:</strong> 1 jogador • <strong>Objetivo:</strong> Construir as fundações de todas as famílias.</p>
+                <ul>
+                    <li>Embaralhe as cartas do nível escolhido (ex: 32 cartas no Médio).</li>
+                    <li>Monte o <strong>Tableau</strong>: 5 colunas (coluna 1 com 1 carta, coluna 2 com 2 cartas, ..., coluna 5 com 5 cartas). Apenas a carta do topo de cada coluna fica virada para cima; as de baixo ficam fechadas.</li>
+                    <li>As cartas restantes formam o <strong>Monte de Compras</strong>.</li>
+                    <li><strong>Regra de Movimentação:</strong> Você pode empilhar uma carta sobre outra no tableau <em>se e somente se</em> ambas pertencerem à <strong>mesma família</strong> e forem de <strong>tipos diferentes</strong> (ex: Fração sobre Decimal da mesma família).</li>
+                    <li>Quando reunir as 4 cartas de uma família completa, mova-as para a Fundação!</li>
+                </ul>
+            </div>
+
+            <div class="rule-box">
+                <div class="rule-num">2</div>
+                <h4>Jogo da Memória Racional</h4>
+                <p><strong>Jogadores:</strong> 2 a 4 jogadores • <strong>Objetivo:</strong> Encontrar pares ou quartetos equivalentes.</p>
+                <ul>
+                    <li>Disponha todas as cartas viradas para baixo em uma grade 8 × 4 ou 8 × 5.</li>
+                    <li>Na sua vez, o jogador vira 2 cartas.</li>
+                    <li>Se as duas cartas pertencerem à <strong>mesma família de equivalência</strong> (ex: 1/4 e 25%), o jogador recolhe o par para si e joga novamente!</li>
+                    <li>Se forem de famílias diferentes, desvira as cartas no mesmo lugar e passa a vez.</li>
+                    <li>Vence quem recolher mais cartas ao final do baralho.</li>
+                </ul>
+            </div>
+
+            <div class="rule-box">
+                <div class="rule-num">3</div>
+                <h4>Batalha das Frações (Maior Valor)</h4>
+                <p><strong>Jogadores:</strong> 2 jogadores (estilo "Guerra") • <strong>Objetivo:</strong> Ficar com todas as cartas.</p>
+                <ul>
+                    <li>Divida o baralho igualmente entre os dois jogadores, mantendo os montes virados para baixo.</li>
+                    <li>Simultaneamente, cada jogador revela a carta do topo do seu monte.</li>
+                    <li>Os jogadores comparam os valores: quem jogou a carta de <strong>maior valor numérico</strong> leva ambas as cartas para o fundo do seu monte!</li>
+                    <li><em>Empate (mesmo valor racional):</em> Dá-se "Batalha"! Cada um coloca 1 carta fechada e 1 carta aberta. Quem vencer a aberta leva todas as 6 cartas acumuladas!</li>
+                </ul>
+            </div>
+
+            <div class="rule-box">
+                <div class="rule-num">4</div>
+                <h4>Quarteto Racional (Go Fish / Famílias)</h4>
+                <p><strong>Jogadores:</strong> 3 a 5 jogadores • <strong>Objetivo:</strong> Completar quartetos das famílias.</p>
+                <ul>
+                    <li>Cada jogador recebe 4 cartas. O restante fica no centro como monte de compras.</li>
+                    <li>Na sua vez, pergunte a um jogador específico por uma representação de uma família que você já tenha na mão (ex: <em>"Mariana, você tem a carta de Figura da Família de 0,5?"</em>).</li>
+                    <li>Se o jogador tiver, deve entregar a carta. Se não tiver, responde <em>"Compre uma carta!"</em>.</li>
+                    <li>Assim que um jogador reúne as 4 cartas da mesma família, baixa o quarteto na mesa.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="cover-card pedagogical-tips" style="margin-top: 2mm;">
+            <h3>💡 Dicas Pedagógicas para o Professor em Sala de Aula</h3>
+            <div style="display: flex; gap: 15px; font-size: 7.5pt; color: #334155; line-height: 1.4;">
+                <div style="flex:1;">
+                    <strong>Dica 1 — Comece pelos Casos Simples:</strong> Com alunos do 6º ano, inicie utilizando apenas as 6 famílias do nível Fácil (denominadores 2, 4 e 5). Isso evita atrito com dízimas periódicas nas primeiras aulas.
+                </div>
+                <div style="flex:1;">
+                    <strong>Dica 2 — Roda de Discussão da Equivalência:</strong> Peça aos alunos para colocarem a carta de fração irredutível ao lado da fração equivalente e do disco de pizza. Pergunte: <em>"A quantidade pintada mudou ou apenas a quantidade de pedaços?"</em>
+                </div>
+                <div style="flex:1;">
+                    <strong>Dica 3 — Desafio do Número Misto:</strong> Introduza as famílias 9 e 10 (1 1/4 e 1 1/2) para desmistificar a fração imprópria, mostrando fisicamente que um valor pode ultrapassar o 100% (1 inteiro).
+                </div>
+            </div>
+        </div>
+
+        <div class="cover-footer">
+            <span>Paciência Racional • Projeto de Educação Matemática</span>
+            <span>Verso da Folha de Instruções (Página 2 de 12 do PDF)</span>
+        </div>
+    </div>
+    '''
+
+    # Layout assembly:
+    # Page 1: Cover (Frente da folha de instruções)
+    # Page 2: Rules (Verso da folha de instruções)
+    # Page 3: Front 1, Page 4: Back 1
+    # Page 5: Front 2, Page 6: Back 2
+    # Page 7: Front 3, Page 8: Back 3
+    # Page 9: Front 4, Page 10: Back 4
+    # Page 11: Front 5, Page 12: Back 5
+    # TOTAL: EXACTLY 12 PAGES (6 SHEETS DUPLEX)!
+    pages_combined = [cover_page, rules_page]
+    for fp, bp in zip(front_pages, back_pages):
+        pages_combined.append(fp)
+        pages_combined.append(bp)
+
+    html_content = f'''<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Paciência Racional — Baralho Completo para Impressão (PDF)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ==========================================================================
+           PRINT SETUP (A4 Landscape, Exact Sizing)
+           ========================================================================== */
+        @page {{
+            size: A4 landscape;
+            margin: 0;
+        }}
+
+        * {{
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }}
+
+        body {{
+            margin: 0;
+            padding: 0;
+            background-color: #0f172a;
+            font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            color: #0f172a;
+        }}
+
+        .no-print-bar {{
+            background: #1e293b;
+            color: #ffffff;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 9999;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            border-bottom: 1px solid #334155;
+        }}
+
+        .print-btn {{
+            background: #2563eb;
+            color: #ffffff;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(37,99,235,0.4);
+            transition: all 0.2s;
+        }}
+        .print-btn:hover {{
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }}
+
+        .download-btn {{
+            background: #059669;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }}
+        .download-btn:hover {{
+            background: #047857;
+        }}
+
+        @media print {{
+            .no-print-bar {{
+                display: none !important;
+            }}
+            body {{
+                background-color: #ffffff;
+            }}
+            .page {{
+                page-break-after: always;
+                break-after: page;
+                margin: 0 !important;
+                box-shadow: none !important;
+            }}
+        }}
+
+        /* ==========================================================================
+           PAGE LAYOUT (297mm x 210mm)
+           ========================================================================== */
+        .page {{
+            width: 297mm;
+            height: 210mm;
+            padding: 7mm 16.5mm 9mm 16.5mm;
+            margin: 20px auto;
+            background-color: #ffffff;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+        }}
+
+        .page-meta {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 8pt;
+            color: #64748b;
+            padding-bottom: 1.8mm;
+            border-bottom: 0.5pt solid #cbd5e1;
+            margin-bottom: 2.5mm;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+        .page-meta strong {{
+            color: #0f172a;
+            font-weight: 800;
+        }}
+        .cut-hint {{
+            color: #0284c7;
+            font-weight: 700;
+        }}
+
+        /* ==========================================================================
+           GRID: 4 Columns x 2 Rows
+           Each Card: 63.5mm x 88.9mm (Poker Standard)
+           Left/Right margin: 16.5mm, Card width: 63.5mm * 4 = 254mm, Gap = 3.33mm
+           Total width = 16.5 + 254 + 10 = 280.5mm (+ 16.5 = 297mm) -> PERFECT SYMMETRY!
+           ========================================================================== */
+        .cards-grid {{
+            display: grid;
+            grid-template-columns: repeat(4, 63.5mm);
+            grid-template-rows: repeat(2, 88.9mm);
+            column-gap: 3.33mm;
+            row-gap: 4mm;
+            justify-content: center;
+            align-content: center;
+            margin: auto 0;
+        }}
+
+        .card-container {{
+            width: 63.5mm;
+            height: 88.9mm;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+
+        /* Cut-mark crop indicators */
+        .card-container::before {{
+            content: '';
+            position: absolute;
+            inset: -1.6mm;
+            border: 0.5pt dashed #cbd5e1;
+            pointer-events: none;
+            z-index: 0;
+        }}
+
+        /* ==========================================================================
+           CARD STYLES (FRONT)
+           ========================================================================== */
+        .game-card {{
+            width: 63.5mm;
+            height: 88.9mm;
+            border-radius: 4mm;
+            background-color: #ffffff;
+            box-sizing: border-box;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }}
+
+        .card-front {{
+            border: 1.8pt solid #94a3b8;
+            background: #ffffff;
+            box-shadow: 0 1pt 3pt rgba(0,0,0,0.05);
+        }}
+
+        .card-inner-frame {{
+            position: absolute;
+            inset: 1.8mm;
+            border: 0.6pt solid #e2e8f0;
+            border-radius: 2.8mm;
+            pointer-events: none;
+            z-index: 1;
+        }}
+
+        .card-inner {{
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 2.5mm 3.2mm;
+            position: relative;
+            z-index: 2;
+        }}
+
+        /* Header */
+        .card-header {{
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            width: 100%;
+            position: relative;
+        }}
+
+        .corner-index {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1;
+        }}
+        .corner-index.top-left {{
+            text-align: left;
+            align-items: flex-start;
+        }}
+        .corner-index.bottom-right {{
+            transform: rotate(180deg);
+            text-align: left;
+            align-items: flex-start;
+        }}
+        .corner-val {{
+            font-size: 8.5pt;
+            font-weight: 900;
+            color: #0f172a;
+            letter-spacing: -0.2px;
+        }}
+        .corner-type-icon {{
+            font-size: 6.5pt;
+            font-weight: 900;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-top: 1pt;
+        }}
+        .mini-pie-icon {{
+            width: 11px;
+            height: 11px;
+            margin-top: 1pt;
+        }}
+
+        .badge {{
+            font-size: 6.8pt;
+            font-weight: 800;
+            padding: 1.8pt 5.5pt;
+            border-radius: 3pt;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            border: 0.8pt solid transparent;
+        }}
+
+        .badge-frac {{
+            background-color: #ecfdf5;
+            color: #065f46;
+            border-color: #10b981;
+        }}
+        .badge-equiv {{
+            background-color: #fffbeb;
+            color: #92400e;
+            border-color: #f59e0b;
+        }}
+        .badge-dec {{
+            background-color: #f0f9ff;
+            color: #0369a1;
+            border-color: #0ea5e9;
+        }}
+        .badge-fig {{
+            background-color: #eef2ff;
+            color: #4338ca;
+            border-color: #6366f1;
+        }}
+
+        .fam-tag {{
+            font-size: 6.5pt;
+            font-weight: 900;
+            color: #64748b;
+            background: #f1f5f9;
+            border: 0.6pt solid #cbd5e1;
+            border-radius: 2pt;
+            padding: 1pt 3.5pt;
+        }}
+
+        /* Center Content */
+        .card-main-content {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            margin: auto 0;
+            width: 100%;
+        }}
+
+        /* Fractions */
+        .fraction-box {{
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            color: #0f172a;
+            line-height: 1;
+        }}
+        .large-frac {{
+            font-size: 29pt;
+        }}
+        .large-frac.frac-color {{
+            color: #0f172a;
+        }}
+        .large-frac.equiv-color {{
+            color: #78350f;
+        }}
+        .frac-num {{
+            border-bottom: 2.8pt solid currentColor;
+            padding-bottom: 2pt;
+            width: 100%;
+            text-align: center;
+            min-width: 32px;
+        }}
+        .frac-den {{
+            padding-top: 2pt;
+            width: 100%;
+            text-align: center;
+            min-width: 32px;
+        }}
+
+        .mixed-frac-box {{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }}
+        .mixed-whole {{
+            font-size: 32pt;
+            font-weight: 900;
+            color: #0f172a;
+            line-height: 1;
+        }}
+        .mixed-frac-box .fraction-box {{
+            font-size: 20pt;
+        }}
+
+        .sub-equiv {{
+            font-size: 7.5pt;
+            font-weight: 700;
+            color: #64748b;
+            margin-top: 3pt;
+        }}
+
+        /* Decimal & Percentage */
+        .dec-value {{
+            font-size: 32pt;
+            font-weight: 900;
+            color: #0284c7;
+            letter-spacing: -0.5px;
+            line-height: 1;
+        }}
+        .pct-pill {{
+            font-size: 13pt;
+            font-weight: 800;
+            color: #0369a1;
+            background: #e0f2fe;
+            border: 1.2pt solid #7dd3fc;
+            border-radius: 12pt;
+            padding: 2pt 9pt;
+            margin-top: 3pt;
+        }}
+
+        /* Figural SVG */
+        .pie-container {{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-height: 42mm;
+        }}
+        .mixed-pies-wrap {{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2mm;
+            width: 100%;
+        }}
+
+        /* Footer */
+        .card-footer {{
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            width: 100%;
+            position: relative;
+        }}
+        .footer-info {{
+            display: flex;
+            flex-direction: column;
+            gap: 1pt;
+        }}
+        .fam-badge {{
+            font-size: 6.8pt;
+            font-weight: 800;
+            color: #334155;
+        }}
+        .footer-sub {{
+            font-size: 6.2pt;
+            font-weight: 700;
+            color: #64748b;
+        }}
+
+        /* ==========================================================================
+           CARD STYLES (BACK) — Azul Safira Clássico de Baralho
+           ========================================================================== */
+        .card-back {{
+            border: 2.2pt solid #ffffff;
+            background: #1e3a8a;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1pt 4pt rgba(0,0,0,0.18);
+        }}
+
+        .back-inner {{
+            width: calc(100% - 3.5mm);
+            height: calc(100% - 3.5mm);
+            border-radius: 2.5mm;
+            background: radial-gradient(ellipse at center, #1d4ed8 0%, #1e3a8a 65%, #0f172a 100%);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: inset 0 0 0 1.2pt rgba(254, 240, 138, 0.7);
+        }}
+
+        .back-pattern {{
+            position: absolute;
+            inset: 0;
+            opacity: 0.16;
+            background-image: 
+                radial-gradient(#ffffff 1.2px, transparent 1.2px),
+                radial-gradient(#ffffff 1.2px, #1e3a8a 1.2px);
+            background-size: 8px 8px;
+            background-position: 0 0, 4px 4px;
+        }}
+
+        .back-frame-border {{
+            position: absolute;
+            inset: 2.5mm;
+            border: 0.8pt solid rgba(254, 240, 138, 0.4);
+            border-radius: 1.8mm;
+            pointer-events: none;
+        }}
+
+        .back-center-crest {{
+            position: relative;
+            z-index: 2;
+            width: 82%;
+            padding: 5mm 2mm;
+            background: rgba(15, 23, 42, 0.88);
+            border: 1.2pt solid rgba(254, 240, 138, 0.85);
+            border-radius: 3.5mm;
+            text-align: center;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+        }}
+
+        .crest-icon {{
+            margin-bottom: 2pt;
+            display: flex;
+            justify-content: center;
+        }}
+        .crest-title {{
+            font-size: 9.5pt;
+            font-weight: 900;
+            color: #fef08a;
+            letter-spacing: 1.5px;
+            line-height: 1.1;
+        }}
+        .crest-subtitle {{
+            font-size: 5.8pt;
+            font-weight: 700;
+            color: #cbd5e1;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-top: 3pt;
+        }}
+        .crest-divider {{
+            width: 60%;
+            height: 0.6pt;
+            background: rgba(254, 240, 138, 0.4);
+            margin: 3pt auto;
+        }}
+        .crest-symbols {{
+            font-size: 7pt;
+            font-weight: 800;
+            color: #93c5fd;
+            letter-spacing: 2.5px;
+        }}
+
+        /* ==========================================================================
+           COVER & RULES PAGES STYLING
+           ========================================================================== */
+        .page-cover {{
+            padding: 8mm 14mm 8mm 14mm;
+        }}
+        .cover-header {{
+            text-align: center;
+            border-bottom: 1.2pt solid #e2e8f0;
+            padding-bottom: 2.5mm;
+            margin-bottom: 2.5mm;
+        }}
+        .cover-badge {{
+            display: inline-block;
+            font-size: 7.5pt;
+            font-weight: 800;
+            color: #2563eb;
+            background: #eff6ff;
+            border: 1pt solid #bfdbfe;
+            padding: 2pt 8pt;
+            border-radius: 12pt;
+            letter-spacing: 1px;
+            margin-bottom: 2pt;
+        }}
+        .cover-title {{
+            font-size: 22pt;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 0;
+            letter-spacing: -0.5px;
+            line-height: 1.1;
+        }}
+        .cover-subtitle {{
+            font-size: 10.5pt;
+            font-weight: 700;
+            color: #475569;
+            margin: 2pt 0 3pt 0;
+        }}
+        .cover-intro {{
+            font-size: 7.8pt;
+            color: #64748b;
+            max-width: 230mm;
+            margin: 0 auto;
+            line-height: 1.35;
+        }}
+        .cover-grid {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3.5mm;
+            margin-bottom: 2.5mm;
+        }}
+        .cover-card {{
+            background: #f8fafc;
+            border: 1pt solid #e2e8f0;
+            border-radius: 3.5mm;
+            padding: 3mm 4mm;
+        }}
+        .cover-card h3 {{
+            margin: 0 0 2mm 0;
+            font-size: 9pt;
+            font-weight: 800;
+            color: #1e293b;
+        }}
+        .cover-card ul {{
+            margin: 0;
+            padding-left: 14px;
+            font-size: 7.2pt;
+            line-height: 1.38;
+            color: #334155;
+        }}
+        .cover-card li {{
+            margin-bottom: 2.5pt;
+        }}
+        .cover-table-section h3 {{
+            margin: 0 0 2mm 0;
+            font-size: 8.8pt;
+            font-weight: 800;
+            color: #1e293b;
+            text-align: center;
+        }}
+        .summary-table {{
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 7.2pt;
+        }}
+        .summary-table th, .summary-table td {{
+            padding: 2pt 4pt;
+            border: 0.5pt solid #cbd5e1;
+            text-align: center;
+        }}
+        .summary-table th {{
+            background: #1e293b;
+            color: #ffffff;
+            font-weight: 800;
+        }}
+        .summary-table tr:nth-child(even) {{
+            background: #f8fafc;
+        }}
+        .lvl {{
+            padding: 1pt 4pt;
+            border-radius: 3pt;
+            font-weight: 800;
+            font-size: 6.2pt;
+            display: inline-block;
+        }}
+        .lvl.facil {{ background: #dcfce7; color: #166534; }}
+        .lvl.medio {{ background: #dbeafe; color: #1e40af; }}
+        .lvl.insano {{ background: #ffe4e6; color: #9f1239; }}
+
+        .rules-grid-4 {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3mm;
+            margin-bottom: 2mm;
+        }}
+        .rule-box {{
+            background: #f8fafc;
+            border: 1pt solid #e2e8f0;
+            border-radius: 3.5mm;
+            padding: 3mm 3.5mm;
+            position: relative;
+        }}
+        .rule-box .rule-num {{
+            position: absolute;
+            top: 3mm;
+            right: 3mm;
+            width: 18px;
+            height: 18px;
+            background: #2563eb;
+            color: #ffffff;
+            font-size: 8pt;
+            font-weight: 900;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+        .rule-box h4 {{
+            margin: 0 0 2pt 0;
+            font-size: 8.8pt;
+            font-weight: 800;
+            color: #1e293b;
+            padding-right: 22px;
+        }}
+        .rule-box p {{
+            margin: 0 0 3pt 0;
+            font-size: 7pt;
+            color: #475569;
+        }}
+        .rule-box ul {{
+            margin: 0;
+            padding-left: 14px;
+            font-size: 6.8pt;
+            color: #334155;
+            line-height: 1.35;
+        }}
+        .rule-box li {{
+            margin-bottom: 2pt;
+        }}
+
+        .cover-footer {{
+            display: flex;
+            justify-content: space-between;
+            font-size: 6.8pt;
+            color: #94a3b8;
+            border-top: 0.5pt solid #e2e8f0;
+            padding-top: 1.5mm;
+            margin-top: 1.5mm;
+        }}
+    </style>
+</head>
+<body>
+
+    <div class="no-print-bar">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size:20px;">🃏</span>
+            <div>
+                <div style="font-weight:800; font-size:16px; letter-spacing:-0.3px;">Paciência Racional — Baralho das Equivalências</div>
+                <div style="font-size:12px; color:#94a3b8;">40 Cartas em Padrão Poker (63,5 × 88,9 mm) • 10 Famílias • Frente e Verso</div>
+            </div>
+        </div>
+        <div style="display:flex; gap:12px; align-items:center;">
+            <a href="cartas-paciencia-racional.pdf" download class="download-btn">
+                ⬇️ Baixar Arquivo PDF Pronto
+            </a>
+            <button onclick="window.print()" class="print-btn">
+                🖨️ Imprimir Agora (Ctrl + P)
+            </button>
+        </div>
+    </div>
+
+    {"".join(pages_combined)}
+
+</body>
+</html>
+'''
+    return html_content
+
+def generate_fronts_only_html(full_html):
+    """Gera versão contendo apenas a folha de capa e as 5 folhas de cartas da frente."""
+    # Replace pages: only keep cover and front pages
+    pass
+
+def main():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    html_file = os.path.join(base_dir, "cartas_para_impressao.html")
+    pdf_file = os.path.join(base_dir, "cartas-paciencia-racional.pdf")
+    
+    print("Gerando HTML completo das cartas...")
+    html_content = generate_html()
+    with open(html_file, "w", encoding="utf-8") as f:
+        f.write(html_content)
+    print(f"HTML gerado: {html_file}")
+    
+    print("Compilando PDF de alta resolução...")
+    cmd = [
+        "google-chrome",
+        "--headless",
+        "--disable-gpu",
+        "--no-pdf-header-footer",
+        f"--print-to-pdf={pdf_file}",
+        html_file
+    ]
+    res = subprocess.run(cmd, capture_output=True, text=True)
+    if res.returncode == 0:
+        pdf_size = os.path.getsize(pdf_file) / 1024
+        print(f"PDF gerado com sucesso: {pdf_file} ({pdf_size:.1f} KB)")
+    else:
+        print("Erro ao gerar PDF:", res.stderr)
+
+if __name__ == "__main__":
+    main()

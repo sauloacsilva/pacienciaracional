@@ -24,9 +24,9 @@
     </script>
     <style>
         :root {
-            --card-width: clamp(48px, 14vw, 94px);
-            --card-height: calc(var(--card-width) * 1.42);
-            --card-gap: clamp(4px, 1.2vw, 12px);
+            --card-width: clamp(58px, 13vw, 94px);
+            --card-height: calc(var(--card-width) * 1.45);
+            --card-gap: clamp(3px, 1vw, 10px);
             --board-bg: radial-gradient(circle at center, #166534 0%, #0f3e21 60%, #052e16 100%);
         }
 
@@ -91,7 +91,7 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 0.35rem 0.35rem;
+            padding: clamp(0.2rem, 0.5vw, 0.35rem) clamp(0.2rem, 0.5vw, 0.35rem);
             border: 2px solid #cbd5e1;
             font-variant-numeric: tabular-nums;
             overflow: hidden;
@@ -179,6 +179,15 @@
             width: var(--card-width);
         }
 
+        /* Small screen overrides */
+        @media (max-width: 420px) {
+            :root {
+                --card-width: clamp(60px, 15.5vw, 80px);
+                --card-height: calc(var(--card-width) * 1.45);
+                --card-gap: 2px;
+            }
+        }
+
         /* Dragging layer */
         #drag-layer {
             position: fixed;
@@ -257,7 +266,7 @@
 <body data-theme="felt-green" data-card-back="blue" class="min-h-screen text-white flex flex-col justify-between select-none">
 
     <!-- TOP HEADER / TOOLBAR -->
-    <header class="glass-panel sticky top-0 z-30 px-2 sm:px-4 py-2 flex flex-wrap items-center justify-between gap-2 shadow-lg">
+    <header class="glass-panel sticky top-0 z-30 px-2 sm:px-4 py-1 sm:py-2 flex flex-wrap items-center justify-between gap-1 sm:gap-2 shadow-lg">
         <!-- Logo & Difficulty -->
         <div class="flex items-center gap-2 flex-wrap">
             <div class="bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black px-2.5 py-1 rounded-lg text-xs sm:text-sm tracking-wide shadow-md flex items-center gap-1.5 cursor-pointer" id="logo-badge" title="Paciência das Equivalências Racionais">
@@ -344,24 +353,24 @@
     </header>
 
     <!-- Mobile Stats & Timer Bar -->
-    <div class="md:hidden flex justify-around items-center bg-emerald-950/80 px-2 py-1.5 text-xs text-emerald-200 border-b border-emerald-800/50 font-medium">
+    <div class="md:hidden flex justify-around items-center bg-emerald-950/80 px-2 py-0.5 text-[10px] text-emerald-200 border-b border-emerald-800/50 font-medium">
         <div class="flex items-center gap-1 font-mono">
             <span class="text-amber-400">⏱️</span>
             <span id="timer-display-mobile" class="font-bold text-white">00:00</span>
-            <span id="multiplier-badge-mobile" class="text-[10px] font-black text-amber-300 bg-amber-500/20 px-1 rounded">3.0x</span>
+            <span id="multiplier-badge-mobile" class="text-[9px] font-black text-amber-300 bg-amber-500/20 px-1 rounded">3.0x</span>
         </div>
-        <span>Pontos: <strong id="score-count-mobile" class="text-amber-300">0</strong></span>
+        <span>Pts: <strong id="score-count-mobile" class="text-amber-300">0</strong></span>
         <span>Movs: <strong id="move-count-mobile" class="text-white">0</strong></span>
-        <span>Conjuntos: <strong id="completed-sets-mobile" class="text-emerald-300">0/8</strong></span>
+        <span>Sets: <strong id="completed-sets-mobile" class="text-emerald-300">0/8</strong></span>
     </div>
 
     <!-- MAIN BOARD AREA -->
-    <main id="game-board" class="flex-1 max-w-5xl w-full mx-auto px-2 py-3 flex flex-col gap-4 justify-start transition duration-300">
+    <main id="game-board" class="flex-1 max-w-5xl w-full mx-auto px-1.5 sm:px-2 py-1.5 sm:py-3 flex flex-col gap-2 sm:gap-4 justify-start transition duration-300">
         
         <!-- TOP SECTION: Stock, Waste, Stock Recycle Info & Foundations -->
-        <section class="flex flex-wrap justify-between items-center gap-3">
+        <section class="flex flex-wrap justify-between items-center gap-1.5 sm:gap-3">
             <!-- Stock & Waste (Left side) -->
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1.5 sm:gap-3">
                 <!-- Stock Pile Slot -->
                 <div class="flex flex-col items-center">
                     <div class="flex items-center justify-between w-full mb-0.5 px-0.5">
@@ -414,7 +423,7 @@
                 <span id="diff-indicator-badge" class="text-[10px] px-2 py-0.5 rounded font-bold bg-blue-900/60 text-sky-200 border border-sky-400/40">Médio</span>
             </div>
             
-            <div id="tableau-container" class="flex justify-around items-start gap-1 sm:gap-2 min-h-[350px] pb-12">
+            <div id="tableau-container" class="flex justify-around items-start gap-1 sm:gap-2 min-h-[250px] pb-2 sm:pb-8">
                 <!-- Dynamically populated according to difficulty (4, 5 or 6 columns) -->
             </div>
         </section>
@@ -1410,7 +1419,7 @@
                 columnCards.forEach((item, cardIdx) => {
                     const wrapper = document.createElement('div');
                     wrapper.className = 'tableau-card-wrapper';
-                    const yOffset = window.innerWidth < 640 ? 22 : 30;
+                    const yOffset = window.innerWidth < 480 ? 26 : window.innerWidth < 640 ? 28 : 30;
                     wrapper.style.top = `${cardIdx * yOffset}px`;
 
                     const cardEl = renderCardElement(item.card, item.faceUp);
